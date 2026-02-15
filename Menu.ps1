@@ -26,6 +26,36 @@ if (Test-Path -Path $commonFunctionsPath) {
     Write-Warning "Common-Functions.ps1 not found. Some features may not work correctly."
 }
 
+# Load language strings
+$script:LanguageStrings = Get-LanguageStrings
+if ($script:LanguageStrings) {
+    $configuredLanguage = Get-ODTConfigValue -Section "General" -Key "Language" -Default "en-US"
+    Write-ODTLog "Language loaded: $configuredLanguage" -Level Info
+} else {
+    Write-ODTLog "Failed to load language strings, using hardcoded defaults" -Level Warning
+}
+
+# Helper function to get localized menu strings
+function Get-MenuString {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Key,
+        
+        [Parameter(Mandatory = $false)]
+        [object[]]$Arguments
+    )
+    
+    if ($script:LanguageStrings -and $script:LanguageStrings.Menu -and $script:LanguageStrings.Menu.$Key) {
+        $string = $script:LanguageStrings.Menu.$Key
+        if ($Arguments) {
+            return $string -f $Arguments
+        }
+        return $string
+    }
+    # Return the key as fallback if translation not found
+    return $Key
+}
+
 # Initialize required directories
 try {
     Initialize-Directories -Paths @("downloads", "backups")
@@ -39,8 +69,8 @@ Remove-Item -Path ODT_update_temporary.ps1 -ErrorAction SilentlyContinue
 # Verify required tools are present
 if (-not (Test-RequiredTools -ToolsPath ".\tools")) {
     $msgResult = [System.Windows.Forms.MessageBox]::Show(
-        "Some required tools are missing. The application may not function correctly.`n`nDo you want to continue anyway?",
-        "Missing Tools",
+        (Get-MenuString -Key "MissingTools"),
+        (Get-MenuString -Key "MissingToolsTitle"),
         [System.Windows.Forms.MessageBoxButtons]::YesNo,
         [System.Windows.Forms.MessageBoxIcon]::Warning
     )
@@ -71,7 +101,8 @@ try {
 $menuContent = Get-Content -Path $MyInvocation.MyCommand.Path
 if ($menuContent -and $menuContent[0]) {
     $currentVersion = $menuContent[0] -replace "# Onion-Desktop-Tools-"
-    Write-Host "ODT version : $currentVersion"
+    $versionMessage = Get-MenuString -Key "ODTVersion" -Arguments $currentVersion
+    Write-Host $versionMessage
 }
 else {
     Write-Host "Failed to retrieve the current version from Menu.ps1 file."
@@ -103,7 +134,7 @@ if ($HighDPI -eq 1) {
 
 # Create main window
 $Form = New-Object System.Windows.Forms.Form
-$Form.Text = "Onion Desktop Tools"
+$Form.Text = Get-MenuString -Key "WindowTitle"
 $Form.Size = New-Object System.Drawing.Size(505, 320)
 $form.StartPosition = "CenterScreen"
 $iconPath = Join-Path -Path $PSScriptRoot -ChildPath "tools\res\onion.ico"
@@ -163,10 +194,10 @@ $OKButton_Click = {
             $OKButton.Enabled = 1
         }
 
-        if ($selectedOption.text -eq $InstallUpdateRadioButton0.Text) {
+        if ($selectedOption.Tag -eq "InstallWithoutFormat") {
             # Install / Upgrade / Reinstall Onion without formatting SD card
             $OKButton.Enabled = 0
-            $CurrentDrive = Get_Drive "Select target drive for Onion"
+            $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectTargetDrive")
             if ($CurrentDrive -ne $null) {
                 Write-Host "{$CurrentDrive[1]}:"
                 . "$PSScriptRoot\Onion_Install_Download.ps1"
@@ -175,10 +206,10 @@ $OKButton_Click = {
             $OKButton.Enabled = 1
         }
         
-        if ($selectedOption.text -eq $InstallUpdateRadioButton1.Text) {
+        if ($selectedOption.Tag -eq "FormatAndInstall") {
             # "Format SD card or install Onion"
             $OKButton.Enabled = 0
-            $CurrentDrive = Get_Drive "Select target drive for Onion"
+            $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectTargetDrive")
             if ($CurrentDrive -ne $null) {
                 # Sometimes a checkdisk is required to format 
                 # $wgetProcess = Start-Process -FilePath "cmd" -ArgumentList "/k chkdsk $($CurrentDrive[1]): /F /X & echo.&echo Close this window to continue"  -PassThru
@@ -189,30 +220,30 @@ $OKButton_Click = {
                     . "$PSScriptRoot\Onion_Install_Extract.ps1" -Target "$($CurrentDrive[1]):"
                 }
                 else {
-                    Write-Host "Operation canceled or something wrong during formating" 
+                    Write-Host (Get-MenuString -Key "OperationCanceled")
                 }
             }
             $OKButton.Enabled = 1
         }
 
-        if ($selectedOption.text -eq $InstallUpdateRadioButton2.Text) {
+        if ($selectedOption.Tag -eq "MigrateStock") {
             # "Migrate stock SD card to a new SD card with Onion"
             $OKButton.Enabled = 0
-            $messageBoxText = "Insert Miyoo Stock SD card now."
-            $messageBoxCaption = "Stock Backup"
+            $messageBoxText = Get-MenuString -Key "InsertStockSD"
+            $messageBoxCaption = Get-MenuString -Key "StockBackup"
             $messageBoxButtons = [System.Windows.Forms.MessageBoxButtons]::OK
             $messageBoxIcon = [System.Windows.Forms.MessageBoxIcon]::Information
             [System.Windows.Forms.MessageBox]::Show($messageBoxText, $messageBoxCaption, $messageBoxButtons, $messageBoxIcon)
-            $CurrentDrive = Get_Drive "Select stock SD card"
+            $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectStockSD")
             if ($CurrentDrive -ne $null) {
                 . "$PSScriptRoot\Onion_Save_Backup.ps1" -Drive_Number $CurrentDrive[0]
                 
-                $messageBoxText = "Insert Onion target SD card now."
-                $messageBoxCaption = "Backup restoration"
+                $messageBoxText = Get-MenuString -Key "InsertOnionSD"
+                $messageBoxCaption = Get-MenuString -Key "BackupRestoration"
                 $messageBoxButtons = [System.Windows.Forms.MessageBoxButtons]::OK
                 $messageBoxIcon = [System.Windows.Forms.MessageBoxIcon]::Information
                 [System.Windows.Forms.MessageBox]::Show($messageBoxText, $messageBoxCaption, $messageBoxButtons, $messageBoxIcon)
-                $CurrentDrive = Get_Drive "Select target drive for Onion"
+                $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectTargetDrive")
                 if ($CurrentDrive -ne $null) {
                     # Sometimes a chkdsk is required to format 
                     # $wgetProcess = Start-Process -FilePath "cmd" -ArgumentList "/k chkdsk $($CurrentDrive[1]): /F /X & echo.&echo Close this window to continue"  -PassThru
@@ -227,9 +258,9 @@ $OKButton_Click = {
             }
             $OKButton.Enabled = 1
         }
-        if ($selectedOption.text -eq $OtherToolsRadioButton3.text) {   #Check for errors (chkdsk)
+        if ($selectedOption.Tag -eq "CheckErrors") {   #Check for errors (chkdsk)
             $OKButton.Enabled = 0
-            $CurrentDrive = Get_Drive "Select a drive to check"
+            $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectDriveToCheck")
             if ($CurrentDrive -ne $null) {
                 $wgetProcess = Start-Process -FilePath "cmd" -ArgumentList "/k chkdsk $($CurrentDrive[1]): /F /X & echo.&echo Close this window to continue"  -PassThru
                 $wgetProcess.WaitForExit()
@@ -237,27 +268,27 @@ $OKButton_Click = {
             $OKButton.Enabled = 1
         }
 
-        if ($selectedOption.text -eq "Format SD card in FAT32") {
+        if ($selectedOption.Tag -eq "FormatSD") {
             $OKButton.Enabled = 0
-            $CurrentDrive = Get_Drive "Select a drive to format"
+            $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectDriveToFormat")
             if ($CurrentDrive -ne $null) {
                 . "$PSScriptRoot\Disk_Format.ps1" -Drive_Number $CurrentDrive[0]
             }
             $OKButton.Enabled = 1
         }
 
-        if ($selectedOption.text -eq $BackupRestoreRadioButton1.Text) {
+        if ($selectedOption.Tag -eq "BackupSDCard") {
             $OKButton.Enabled = 0
-            $CurrentDrive = Get_Drive "Select a drive to backup"
+            $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectDriveToBackup")
             if ($CurrentDrive -ne $null) {
                 . "$PSScriptRoot\Onion_Save_Backup.ps1" $CurrentDrive[1]
             }
             $OKButton.Enabled = 1
         }
 
-        if ($selectedOption.text -eq $BackupRestoreRadioButton2.Text) {
+        if ($selectedOption.Tag -eq "RestoreBackup") {
             $OKButton.Enabled = 0
-            $CurrentDrive = Get_Drive "Select a destination drive"
+            $CurrentDrive = Get_Drive (Get-MenuString -Key "SelectDestDrive")
             if ($CurrentDrive -ne $null) {
                 . "$PSScriptRoot\Onion_Save_Restore.ps1" -Target "$($CurrentDrive[1]):"
             }
@@ -288,7 +319,7 @@ function Get_Drive($Title) {
 
 # Tab "Install or Update Onion"
 $InstallUpdateTab = New-Object System.Windows.Forms.TabPage
-$InstallUpdateTab.Text = "Install or Update Onion"
+$InstallUpdateTab.Text = Get-MenuString -Key "TabInstallUpdate"
 $TabControl.TabPages.Add($InstallUpdateTab)
 
 # Create GroupBox control for the "Install and Update Onion" tab
@@ -301,30 +332,33 @@ $InstallUpdateTab.Controls.Add($InstallUpdateGroupBox)
 $InstallUpdateRadioButton0 = New-Object System.Windows.Forms.RadioButton
 $InstallUpdateRadioButton0.Location = New-Object System.Drawing.Point(20, 30)
 $InstallUpdateRadioButton0.Size = New-Object System.Drawing.Size(380, 20)
-$InstallUpdateRadioButton0.Text = "Install / Upgrade / Reinstall Onion (without formatting SD card)"
+$InstallUpdateRadioButton0.Text = Get-MenuString -Key "InstallWithoutFormat"
+$InstallUpdateRadioButton0.Tag = "InstallWithoutFormat"
 $InstallUpdateGroupBox.Controls.Add($InstallUpdateRadioButton0)
 $tooltip = New-Object System.Windows.Forms.ToolTip
-$tooltip.SetToolTip($InstallUpdateRadioButton0, "This will download and update Onion. It will keep your data`n(including ROMs, saves, and RetroArch configuration)")
+$tooltip.SetToolTip($InstallUpdateRadioButton0, (Get-MenuString -Key "InstallWithoutFormatTooltip"))
 
 # Add radio buttons to the GroupBox
 $InstallUpdateRadioButton1 = New-Object System.Windows.Forms.RadioButton
 $InstallUpdateRadioButton1.Location = New-Object System.Drawing.Point(20, 60)
 $InstallUpdateRadioButton1.Size = New-Object System.Drawing.Size(380, 20)
-$InstallUpdateRadioButton1.Text = "Format SD card and install Onion"
+$InstallUpdateRadioButton1.Text = Get-MenuString -Key "FormatAndInstall"
+$InstallUpdateRadioButton1.Tag = "FormatAndInstall"
 $InstallUpdateGroupBox.Controls.Add($InstallUpdateRadioButton1)
 $tooltip = New-Object System.Windows.Forms.ToolTip
-$tooltip.SetToolTip($InstallUpdateRadioButton1, "This will format your SD card in FAT32`n(all the data on the SD card will be deleted),`nThen it will download and install Onion on your SD Card.")
+$tooltip.SetToolTip($InstallUpdateRadioButton1, (Get-MenuString -Key "FormatAndInstallTooltip"))
 
 $InstallUpdateRadioButton2 = New-Object System.Windows.Forms.RadioButton
 $InstallUpdateRadioButton2.Location = New-Object System.Drawing.Point(20, 90)
 $InstallUpdateRadioButton2.Size = New-Object System.Drawing.Size(380, 20)
-$InstallUpdateRadioButton2.Text = "Migrate stock SD card to a new SD card with Onion"
+$InstallUpdateRadioButton2.Text = Get-MenuString -Key "MigrateStock"
+$InstallUpdateRadioButton2.Tag = "MigrateStock"
 $InstallUpdateGroupBox.Controls.Add($InstallUpdateRadioButton2)
-$tooltip.SetToolTip($InstallUpdateRadioButton2, "This is a complete migration procedure for Onion.`nIt will backup your Miyoo stock SD card (bios, ROMs, and saves)`nthen it will format your new SD card in FAT32, download and`ninstall Onion, and then restore your stock backup data.")
+$tooltip.SetToolTip($InstallUpdateRadioButton2, (Get-MenuString -Key "MigrateStockTooltip"))
 
 # Tab "Onion configuration"
 $OnionConfigTab = New-Object System.Windows.Forms.TabPage
-$OnionConfigTab.Text = "Onion configuration"
+$OnionConfigTab.Text = Get-MenuString -Key "TabOnionConfig"
 $TabControl.TabPages.Add($OnionConfigTab)
 
 # Create GroupBox control for the "Onion configuration" tab
@@ -379,7 +413,7 @@ foreach ($configFile in $onionConfigFiles) {
 
 # Tab "Backup or Restore Onion"
 $BackupRestoreTab = New-Object System.Windows.Forms.TabPage
-$BackupRestoreTab.Text = "Backup or Restore Onion"
+$BackupRestoreTab.Text = Get-MenuString -Key "TabBackupRestore"
 $TabControl.TabPages.Add($BackupRestoreTab)
 
 # Create GroupBox control for the "Backup or Restore Onion" tab
@@ -392,18 +426,20 @@ $BackupRestoreTab.Controls.Add($BackupRestoreGroupBox)
 $BackupRestoreRadioButton1 = New-Object System.Windows.Forms.RadioButton
 $BackupRestoreRadioButton1.Location = New-Object System.Drawing.Point(20, 30)
 $BackupRestoreRadioButton1.Size = New-Object System.Drawing.Size(250, 20)
-$BackupRestoreRadioButton1.Text = "Backup Onion or Stock SD card data"
+$BackupRestoreRadioButton1.Text = Get-MenuString -Key "BackupSDCard"
+$BackupRestoreRadioButton1.Tag = "BackupSDCard"
 $BackupRestoreGroupBox.Controls.Add($BackupRestoreRadioButton1)
 
 $BackupRestoreRadioButton2 = New-Object System.Windows.Forms.RadioButton
 $BackupRestoreRadioButton2.Location = New-Object System.Drawing.Point(20, 60)
 $BackupRestoreRadioButton2.Size = New-Object System.Drawing.Size(250, 20)
-$BackupRestoreRadioButton2.Text = "Restore a backup on Onion"
+$BackupRestoreRadioButton2.Text = Get-MenuString -Key "RestoreBackup"
+$BackupRestoreRadioButton2.Tag = "RestoreBackup"
 $BackupRestoreGroupBox.Controls.Add($BackupRestoreRadioButton2)
 
 # Tab "Other Tools"
 $OtherToolsTab = New-Object System.Windows.Forms.TabPage
-$OtherToolsTab.Text = "SD card tools"
+$OtherToolsTab.Text = Get-MenuString -Key "TabSDTools"
 $TabControl.TabPages.Add($OtherToolsTab)
 
 # Create GroupBox control for the "Other Tools" tab
@@ -422,24 +458,26 @@ $OtherToolsTab.Controls.Add($OtherToolsGroupBox)
 $OtherToolsRadioButton2 = New-Object System.Windows.Forms.RadioButton
 $OtherToolsRadioButton2.Location = New-Object System.Drawing.Point(20, 30)
 $OtherToolsRadioButton2.Size = New-Object System.Drawing.Size(250, 20)
-$OtherToolsRadioButton2.Text = "Format SD card in FAT32"
+$OtherToolsRadioButton2.Text = Get-MenuString -Key "FormatSD"
+$OtherToolsRadioButton2.Tag = "FormatSD"
 $OtherToolsGroupBox.Controls.Add($OtherToolsRadioButton2)
 
 $OtherToolsRadioButton3 = New-Object System.Windows.Forms.RadioButton
 $OtherToolsRadioButton3.Location = New-Object System.Drawing.Point(20, 60)
 $OtherToolsRadioButton3.Size = New-Object System.Drawing.Size(250, 20)
-$OtherToolsRadioButton3.Text = "Check for errors (chkdsk)"
+$OtherToolsRadioButton3.Text = Get-MenuString -Key "CheckErrors"
+$OtherToolsRadioButton3.Tag = "CheckErrors"
 $OtherToolsGroupBox.Controls.Add($OtherToolsRadioButton3)
 
 
 # Tab "About"
 $AboutTab = New-Object System.Windows.Forms.TabPage
-$AboutTab.Text = "About"
+$AboutTab.Text = Get-MenuString -Key "TabAbout"
 $TabControl.TabPages.Add($AboutTab)
 
 # Create Label control for the "About" tab
 $AboutLabel = New-Object System.Windows.Forms.Label
-$AboutLabel.Text = "Onion Desktop Tools $currentVersion`nBy Schmurtz (Onion Team)`n-----------------------`nSchmurtz Sponsors :"    #`n`n`n-----------------------`nOnion Team Sponsors :
+$AboutLabel.Text = Get-MenuString -Key "AboutText" -Arguments $currentVersion
 $AboutLabel.Location = New-Object System.Drawing.Point(20, 20)
 $AboutLabel.Size = New-Object System.Drawing.Size(200, 70)
 $AboutTab.Controls.Add($AboutLabel)
@@ -471,7 +509,7 @@ $AboutTab.Controls.Add($coffeeLogo)
 
 # Create Label control for the "About" tab
 $AboutLabel = New-Object System.Windows.Forms.Label
-$AboutLabel.Text = "-----------------------`nOnion Team Sponsors :"
+$AboutLabel.Text = Get-MenuString -Key "OnionTeamSponsors"
 $AboutLabel.Location = New-Object System.Drawing.Point(20, 135)
 $AboutLabel.Size = New-Object System.Drawing.Size(200, 35)
 $AboutTab.Controls.Add($AboutLabel)
