@@ -113,10 +113,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Roadmap
 
-### Priority 1 - Planned
-- [ ] Automatic hash verification against GitHub release assets
-- [ ] Persistent logging to file by default
-- [ ] Tools manifest with version pinning and checksums
+### ✅ Priority 1 - COMPLETED (Phase 2)
+- [x] **Persistent logging to file by default** - IMPLEMENTED with daily logs, auto-rotation
+- [x] **Tools manifest with version pinning and checksums** - IMPLEMENTED with SHA256 verification
+- [ ] Automatic hash verification against GitHub release assets - PARTIAL (manual verification implemented)
 
 ### Priority 2 - Future
 - [ ] Enhanced configuration via config.json

@@ -44,7 +44,8 @@ Onion Desktop Tools will help you to format the SD card, download, install, upda
 - SD card reader
 - Internet connection (for downloading Onion OS)
 
-# Features : 
+# Video Tutorials
+
 A tutorial video about Onion Desktop Tool, it describes the process for preparing a new fresh SD card (click on the picture to view it) :
 
 [![Onion Desktop Tool - Video Presentation](https://img.youtube.com/vi/moE52Dw2x64/0.jpg)](https://youtu.be/moE52Dw2x64])
@@ -65,15 +66,24 @@ An advanced tutorial video about Onion Desktop Tool,  (click on the picture to v
 # Security & Error Handling
 
 **Recent Improvements (v0.0.10+):**
+
+**Phase 1 - Security Hardening:**
 - ✅ Enhanced disk validation to prevent accidental system disk formatting
 - ✅ Comprehensive error handling with detailed logging
-- ✅ SHA256 hash computation for downloaded files (manual verification)
+- ✅ SHA256 hash computation for downloaded files
 - ✅ Administrator privilege verification
 - ✅ Improved error messages for troubleshooting
 
+**Phase 2 - Operational Excellence:**
+- ✅ Persistent logging system (daily logs, auto-rotation)
+- ✅ Tools integrity verification (SHA256 checksums for 10 tools)
+- ✅ Enhanced file verification (size + hash checks)
+- ✅ Complete audit trail for debugging
+
 **Logging:**
 - All operations are logged to console with timestamps
-- Optional persistent logging available
+- Persistent logging enabled by default (logs/ directory, auto-rotation)
+- Daily log files with 30-day retention and 10MB size limit
 - Error details include actionable troubleshooting steps
 
 For detailed security analysis and code quality review, see [CODE_REVIEW.md](CODE_REVIEW.md).
