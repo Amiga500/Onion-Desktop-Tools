@@ -85,7 +85,7 @@
       "StockBackup": "Stock Backup",
       "InsertOnionSD": "Insert Onion target SD card now.",
       "BackupRestoration": "Backup restoration",
-      "OperationCanceled": "Operation canceled or something wrong during formating",
+      "OperationCanceled": "Operation canceled or something wrong during formatting",
       "MissingTools": "Some required tools are missing. The application may not function correctly.\n\nDo you want to continue anyway?",
       "MissingToolsTitle": "Missing Tools"
     }
