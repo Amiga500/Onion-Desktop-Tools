@@ -7,16 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Security & Quality Improvements
 
-### Documentation - 2026-02-15
-- **Clarified .exe Launcher Architecture**
-  - Added comprehensive documentation explaining that .exe files are simple wrappers
-  - Documented that all features (language, logging, config) are in PowerShell scripts, not .exe files
-  - Created `RECREATING_EXE_FILES_IT.md` - Italian version of .exe documentation
-  - Created `LANGUAGE_GUIDE.md` - Quick guide for language switching (bilingual)
-  - Created `Demo-Language-Feature.ps1` - Interactive demo of all 5 languages
-  - Clarified that existing .exe files already support ALL new features without regeneration
-  - **Important:** Language modification works immediately with existing .exe files!
-
 ### Added - Phase 5 (2026-02-15)
 - **Complete Multi-Language Support** ✅
   - Added Italian language file (`it-IT.json`) - 60+ strings

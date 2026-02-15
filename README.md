@@ -77,16 +77,6 @@ You can launch Onion Desktop Tools using either:
 
 Both methods are functionally equivalent. The .bat files are more transparent and less likely to trigger antivirus software.
 
-### Troubleshooting .exe Files
-
-**Problem**: Window title shows text without spaces (e.g., "OnionDesktopTools" instead of "Onion Desktop Tools")
-
-**Solution**: The .exe files need to be regenerated with proper title settings. See [RECREATING_EXE_FILES.md](RECREATING_EXE_FILES.md) for detailed instructions. In the meantime, use the .bat launcher files instead, which work identically and don't have this issue.
-
-**Problem**: .exe shows English even with Italian in config.json
-
-**Explanation**: The .exe window title is embedded in the file. The PowerShell UI will display in your selected language. For a native-language experience from start to finish, use the .bat launchers.
-
 ------------------------------------------------
 
 # Security & Error Handling
