@@ -1,23 +1,53 @@
 # Onion-Desktop-Tools-v0.0.9
 
+#Requires -Version 5.1
+#Requires -RunAsAdministrator
+
 param (
     [Parameter(Mandatory = $false)]
     [string]$HighDPI
 )
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Continue'
+
 $selectedTag = ""
 $ScriptPath = $MyInvocation.MyCommand.Path
 $ScriptDirectory = Split-Path $ScriptPath -Parent
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
 
-if (-Not (Test-Path "downloads" -PathType Container)) {
-    New-Item -ItemType Directory -Path "downloads"
-}
-if (-Not (Test-Path "backups" -PathType Container)) {
-    New-Item -ItemType Directory -Path "backups"
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
+    Write-ODTLog "Onion Desktop Tools starting..." -Level Info
+} else {
+    Write-Warning "Common-Functions.ps1 not found. Some features may not work correctly."
 }
 
+# Initialize required directories
+try {
+    Initialize-Directories -Paths @("downloads", "backups")
+} catch {
+    Write-Warning "Failed to create required directories: $_"
+}
+
+# Clean up temporary update file
 Remove-Item -Path ODT_update_temporary.ps1 -ErrorAction SilentlyContinue
+
+# Verify required tools are present
+if (-not (Test-RequiredTools -ToolsPath ".\tools")) {
+    $msgResult = [System.Windows.Forms.MessageBox]::Show(
+        "Some required tools are missing. The application may not function correctly.`n`nDo you want to continue anyway?",
+        "Missing Tools",
+        [System.Windows.Forms.MessageBoxButtons]::YesNo,
+        [System.Windows.Forms.MessageBoxIcon]::Warning
+    )
+    if ($msgResult -eq [System.Windows.Forms.DialogResult]::No) {
+        exit 1
+    }
+}
 
 # Read the Menu.ps1 file and get the version number from the first line
 $menuContent = Get-Content -Path $MyInvocation.MyCommand.Path

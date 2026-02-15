@@ -1,8 +1,17 @@
-﻿$ScriptPath = $MyInvocation.MyCommand.Path
+﻿#Requires -Version 5.1
+
+Set-StrictMode -Version Latest
+
+$ScriptPath = $MyInvocation.MyCommand.Path
 $ScriptDirectory = Split-Path $ScriptPath -Parent
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
 
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
+}
 
 Add-Type -AssemblyName System.Windows.Forms
 
@@ -142,6 +151,16 @@ function Download-Button_Click {
     if ($Downloaded_size -eq $size) {
         Write-Host "File size already OK ! ($Downloaded_size Bytes)"
         $DL_Lbl.Text = "File size already OK ! ($Downloaded_size Bytes)"
+        
+        # Compute and display file hash for verification
+        try {
+            $fileHash = (Get-FileHash -Path "downloads\$Update_FileName" -Algorithm SHA256).Hash
+            Write-Host "File SHA256 hash: $fileHash"
+            Write-ODTLog "Downloaded file hash: $fileHash" -Level Info
+        } catch {
+            Write-Warning "Could not compute file hash: $_"
+        }
+        
         $DownloadButton.enabled = 1
         return 
         #Start-Sleep -Seconds 3
@@ -190,9 +209,21 @@ function Download-Button_Click {
         $Downloaded_size = Get-Item -Path downloads\$Update_FileName | Select-Object -ExpandProperty Length
     }
     else { $Downloaded_size = 0 }
+    
     if ($Downloaded_size -eq $size) {
         Write-Host "File size OK! ($Downloaded_size)"
         $DL_Lbl.Text = "Download successful."
+        
+        # Compute and display file hash for verification
+        try {
+            $fileHash = (Get-FileHash -Path "downloads\$Update_FileName" -Algorithm SHA256).Hash
+            Write-Host "File SHA256 hash: $fileHash"
+            Write-Host "Please verify this hash matches the official release if security is critical."
+            Write-ODTLog "Downloaded file: $Update_FileName - Hash: $fileHash" -Level Info
+        } catch {
+            Write-Warning "Could not compute file hash for verification: $_"
+        }
+        
         #Start-Sleep -Seconds 3
         $timer.Start()
     }

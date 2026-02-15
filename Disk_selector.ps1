@@ -1,6 +1,11 @@
+#Requires -Version 5.1
+
 param (
+    [Parameter(Mandatory = $false)]
     [string]$Title
 )
+
+Set-StrictMode -Version Latest
 
 Write-Host "Title: $Title"
 $ScriptPath = $MyInvocation.MyCommand.Path

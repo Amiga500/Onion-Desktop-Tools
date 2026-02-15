@@ -1,9 +1,17 @@
+#Requires -Version 5.1
+#Requires -RunAsAdministrator
+
 param (
+    [Parameter(Mandatory = $false)]
     [string]$Drive_Number
 )
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
 if (-not $Drive_Number) {
     Write-Host "This script requires a drive number argument."
-    Write-Host "Usage: $ScriptName -Drive_Number <drive_number>"
+    Write-Host "Usage: Disk_Format.ps1 -Drive_Number <drive_number>"
     exit 1
 }
 
@@ -12,10 +20,60 @@ $ScriptDirectory = Split-Path $ScriptPath -Parent
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
 
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
+} else {
+    Write-Error "Common-Functions.ps1 not found. Cannot continue."
+    exit 1
+}
+
+# Verify we're running as administrator
+if (-not (Test-IsAdministrator)) {
+    Write-Error "This script requires administrator privileges."
+    exit 1
+}
+
 
 #$Drive_Number = 6
 
-Write-Host "Drive Number in script arg: $Drive_Number"
+Write-ODTLog "Drive Number in script arg: $Drive_Number" -Level Info
+
+# CRITICAL SECURITY CHECK: Validate disk is safe to format
+$driveLetter = $null
+try {
+    $driveLetter = GetLetterFromDriveNumber
+    
+    if ($driveLetter) {
+        Write-ODTLog "Drive letter detected: $driveLetter" -Level Info
+        
+        # Perform safety validation
+        $isSafe = Test-IsSafeDiskToFormat -DriveNumber ([int]$Drive_Number) -DriveLetter $driveLetter
+        
+        if (-not $isSafe) {
+            $errorMsg = "SECURITY ERROR: Drive $Drive_Number ($driveLetter) failed safety checks.`n`nThis might be a system disk or contain critical files.`n`nFormatting has been BLOCKED to prevent data loss."
+            Write-ODTLog $errorMsg -Level Error
+            [System.Windows.Forms.MessageBox]::Show(
+                $errorMsg,
+                "Format Blocked - Safety Check Failed",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Error
+            )
+            exit 1
+        }
+        Write-ODTLog "Disk safety check passed" -Level Info
+    }
+} catch {
+    Write-ODTLog "Error during safety check: $_" -Level Error
+    [System.Windows.Forms.MessageBox]::Show(
+        "Failed to validate disk safety. Formatting cancelled for security reasons.`n`nError: $_",
+        "Safety Check Failed",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Error
+    )
+    exit 1
+}
 
 
 function GetLetterFromDriveNumber {
@@ -108,29 +166,39 @@ $messageBoxIcon = [System.Windows.Forms.MessageBoxIcon]::Warning
 $result = [System.Windows.Forms.MessageBox]::Show($messageBoxText, $messageBoxCaption, $messageBoxButtons, $messageBoxIcon)
 
 if ($result -eq [System.Windows.Forms.DialogResult]::No) {
+    Write-ODTLog "Format cancelled by user" -Level Info
     exit 1  # Exit script with error code 1
 }
 
-
-Write-Host "Unlocking drive in case of some apps hooks the drive."
-.\tools\LockHunter\LockHunter32.exe /unlock $driveLetter /kill /silent
-
-# formating (SURE option arg is not implemented -> some popups but gives some additional information during formating) 
-Write-Host "Start formating ..."
-
-
-& .\tools\RMPARTUSB-old.exe drive=$Drive_Number WINPE FAT32 NOACT  VOLUME=Onion
-#.\tools\RMPARTUSB-old.exe drive=$Drive_Number WINPE FAT32 NOACT USBFDD VOLUME=Onion
-# Check the exit code
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "An error occurred while executing RMPARTUSB-old.exe."
-    exit 2  # Exit the script with error code 2
-} else {
-    Write-Host "Format command executed successfully."
-    # Continue with other actions as needed.
+try {
+    Write-ODTLog "Unlocking drive in case of some apps hooks the drive." -Level Info
+    .\tools\LockHunter\LockHunter32.exe /unlock $driveLetter /kill /silent
+    
+    # formating (SURE option arg is not implemented -> some popups but gives some additional information during formating) 
+    Write-ODTLog "Start formatting..." -Level Info
+    
+    & .\tools\RMPARTUSB-old.exe drive=$Drive_Number WINPE FAT32 NOACT VOLUME=Onion
+    
+    # Check the exit code
+    if ($LASTEXITCODE -ne 0) {
+        Write-ODTLog "An error occurred while executing RMPARTUSB-old.exe. Exit code: $LASTEXITCODE" -Level Error
+        exit 2  # Exit the script with error code 2
+    } else {
+        Write-ODTLog "Format command executed successfully." -Level Info
+    }
+    
+    Start-Sleep -Seconds 5
+    $driveLetter = GetLetterFromDriveNumber
+    
+} catch {
+    Write-ODTLog "Critical error during format operation: $_" -Level Error
+    [System.Windows.Forms.MessageBox]::Show(
+        "Format operation failed with error:`n`n$_",
+        "Format Error",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Error
+    )
+    exit 2
 }
-
-sleep 5
-$driveLetter = GetLetterFromDriveNumber
 
 
