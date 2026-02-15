@@ -63,6 +63,22 @@ An advanced tutorial video about Onion Desktop Tool,  (click on the picture to v
 
 ------------------------------------------------
 
+# How to Launch:
+
+You can launch Onion Desktop Tools using either:
+
+## .exe Launchers (Recommended for convenience)
+- **Onion Desktop Tools.exe** - Launches with hidden console (cleaner interface)
+- **Onion Desktop Tools - WithConsole.exe** - Launches with visible console (useful for debugging)
+
+## .bat Launchers (Recommended to avoid antivirus warnings)
+- **_Onion Desktop Tools - Launcher.bat** - Launches with hidden console
+- **_Onion Desktop Tools - Launcher (With Console).bat** - Launches with visible console
+
+Both methods are functionally equivalent. The .bat files are more transparent and less likely to trigger antivirus software.
+
+------------------------------------------------
+
 # Security & Error Handling
 
 **Recent Improvements (v0.0.10+):**
