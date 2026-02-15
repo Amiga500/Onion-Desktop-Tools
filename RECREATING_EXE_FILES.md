@@ -66,21 +66,39 @@ The `tools/Bat_To_Exe_Converter.exe` tool is used to convert batch files to exe 
 
 If you need to regenerate the .exe files on a Windows machine:
 
-1. Open `tools/Bat_To_Exe_Converter.exe`
-2. For the hidden console version:
-   - Load `tools/launcher_template_hidden.bat`
-   - Configure settings:
-     - Title: "Onion Desktop Tools"
-     - Invisible application: Yes
-     - Administrator privileges: Yes
-   - Save as: `Onion Desktop Tools.exe`
-3. For the console version:
-   - Load `tools/launcher_template_console.bat`
-   - Configure settings:
-     - Title: "Onion Desktop Tools - With Console"
-     - Invisible application: No
-     - Administrator privileges: Yes
-   - Save as: `Onion Desktop Tools - WithConsole.exe`
+### Step-by-Step Instructions
+
+#### For the Hidden Console Version:
+
+1. **Open** `tools/Bat_To_Exe_Converter.exe`
+2. **Click "Open"** and select `tools/launcher_template_hidden.bat`
+3. **Configure settings** in the Bat_To_Exe_Converter interface:
+   - **Title/Window name**: Enter `Onion Desktop Tools` (with spaces - IMPORTANT!)
+   - **Invisible application**: Check/Enable this option
+   - **Administrator privileges**: Check/Enable this option  
+   - **Icon**: Select `tools/res/onion.ico` if available
+4. **Click "Compile"** or "Build"
+5. **Save as**: `Onion Desktop Tools.exe` (in the root directory)
+
+#### For the Console Version:
+
+1. **Open** `tools/Bat_To_Exe_Converter.exe`
+2. **Click "Open"** and select `tools/launcher_template_console.bat`
+3. **Configure settings** in the Bat_To_Exe_Converter interface:
+   - **Title/Window name**: Enter `Onion Desktop Tools - With Console` (with spaces - IMPORTANT!)
+   - **Invisible application**: Uncheck/Disable this option
+   - **Administrator privileges**: Check/Enable this option
+   - **Icon**: Select `tools/res/onion.ico` if available
+4. **Click "Compile"** or "Build"
+5. **Save as**: `Onion Desktop Tools - WithConsole.exe` (in the root directory)
+
+### Common Mistakes to Avoid:
+
+⚠️ **CRITICAL**: Make sure the Title field includes spaces: `Onion Desktop Tools`
+- ❌ WRONG: `OnionDesktopTools` (no spaces)
+- ✅ CORRECT: `Onion Desktop Tools` (with spaces)
+
+Without proper spacing in the title, the .exe window will display text without spaces, making it hard to read.
 
 ## Alternative Launch Methods
 
@@ -89,6 +107,32 @@ Users can alternatively use the provided .bat files:
 - `_Onion Desktop Tools - Launcher (With Console).bat` - Visible console
 
 These .bat files offer the same functionality as the .exe files but may be preferred to avoid antivirus warnings.
+
+## Troubleshooting
+
+### Problem: Window title shows text without spaces (e.g., "OnionDesktopTools")
+
+**Cause**: The .exe was created with a title field that didn't include proper spaces.
+
+**Solution**: Regenerate the .exe files following the instructions above, making sure to enter the title WITH spaces: `Onion Desktop Tools`
+
+### Problem: Window shows English text even when Italian is selected in config.json
+
+**Cause**: This is expected behavior for the .exe file's own window title. The window title is embedded in the .exe metadata.
+
+**Solution**: 
+- The PowerShell UI (Menu.ps1) will display in the selected language from config.json
+- Only the initial console window title comes from the .exe metadata
+- To avoid confusion, use the .bat launchers instead, which don't embed a fixed title
+
+### Verification
+
+After regenerating the .exe files, verify they work correctly:
+
+1. Double-click the .exe file
+2. The console window (if visible) should show a properly formatted title with spaces
+3. The PowerShell GUI should appear with your selected language from config.json
+4. All text in the GUI should be in your chosen language
 
 ## Notes
 
