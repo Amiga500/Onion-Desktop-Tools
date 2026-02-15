@@ -350,13 +350,5 @@ function Initialize-Directories {
     }
 }
 
-# Export functions
-Export-ModuleMember -Function @(
-    'Test-IsAdministrator',
-    'Test-IsSafeDiskToFormat',
-    'Test-FileHash',
-    'Write-ODTLog',
-    'Invoke-ExternalCommand',
-    'Test-RequiredTools',
-    'Initialize-Directories'
-)
+# Functions are now available for dot-sourcing
+# Usage: . "$PSScriptRoot\Common-Functions.ps1"
