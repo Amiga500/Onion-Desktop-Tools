@@ -156,14 +156,32 @@ function Initialize-Logging {
 .SYNOPSIS
     Validates that the current user has administrator privileges
 .DESCRIPTION
-    Checks if the current PowerShell session is running with administrator rights
+    Checks if the current PowerShell session is running with administrator rights.
+    On Windows, checks for Administrator role. On non-Windows, checks for root (UID 0).
 .OUTPUTS
-    Boolean - True if running as administrator, False otherwise
+    Boolean - True if running as administrator/root, False otherwise
 #>
 function Test-IsAdministrator {
-    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    try {
+        # Check if running on Windows
+        if ($PSVersionTable.PSEdition -eq 'Core' -and -not $IsWindows) {
+            # On Linux/Mac, check if running as root (UID 0)
+            if ($PSVersionTable.Platform -eq 'Unix') {
+                $uid = & id -u
+                return ($uid -eq 0)
+            }
+            return $false
+        }
+        
+        # Windows platform
+        $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
+        return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    }
+    catch {
+        Write-Warning "Failed to check administrator privileges: $_"
+        return $false
+    }
 }
 
 <#

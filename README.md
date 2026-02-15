@@ -80,6 +80,14 @@ An advanced tutorial video about Onion Desktop Tool,  (click on the picture to v
 - ✅ Enhanced file verification (size + hash checks)
 - ✅ Complete audit trail for debugging
 
+**Phase 3 - Advanced Features:**
+- ✅ Enhanced configuration system (config.json with ODT_Settings)
+- ✅ Unit testing framework (Pester with 15+ tests)
+- ✅ Ctrl+C handling for graceful interruption
+- ✅ Dry-run mode (-WhatIf support for safe previews)
+- ✅ Multi-language support infrastructure (en-US)
+- ✅ PowerShell 7 compatibility (tested on 7.4.13)
+
 **Logging:**
 - All operations are logged to console with timestamps
 - Persistent logging enabled by default (logs/ directory, auto-rotation)
@@ -87,6 +95,12 @@ An advanced tutorial video about Onion Desktop Tool,  (click on the picture to v
 - Error details include actionable troubleshooting steps
 
 For detailed security analysis and code quality review, see [CODE_REVIEW.md](CODE_REVIEW.md).
+
+**Configuration & Testing:**
+- Configurable behavior via `config.json` (ODT_Settings section)
+- Run tests: `.\Run-Tests.ps1` (requires Pester framework)
+- Dry-run mode: Add `-WhatIf` to preview operations safely
+- See [PHASE3_SUMMARY.md](PHASE3_SUMMARY.md) for advanced features documentation
 
 ------------------------------------------------
 

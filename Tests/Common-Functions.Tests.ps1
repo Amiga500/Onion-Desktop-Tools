@@ -40,8 +40,14 @@ Describe "Configuration Functions" {
 Describe "Administrator Check" {
     Context "Test-IsAdministrator" {
         It "Should return a boolean value" {
-            $result = Test-IsAdministrator
-            $result | Should -BeOfType [bool]
+            # Skip on non-Windows platforms
+            if ($PSVersionTable.PSEdition -eq 'Core' -and -not $IsWindows) {
+                Set-ItResult -Skipped -Because "Administrator check only works on Windows"
+            }
+            else {
+                $result = Test-IsAdministrator
+                $result | Should -BeOfType [bool]
+            }
         }
     }
 }
