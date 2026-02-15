@@ -95,21 +95,65 @@ Questi template includono:
 
 Se hai bisogno di rigenerare i file .exe su una macchina Windows:
 
-1. Apri `tools/Bat_To_Exe_Converter.exe`
-2. Per la versione console nascosta:
-   - Carica `tools/launcher_template_hidden.bat`
-   - Configura le impostazioni:
-     - Titolo: "Onion Desktop Tools"
-     - Applicazione invisibile: Sì
-     - Privilegi amministratore: Sì
-   - Salva come: `Onion Desktop Tools.exe`
-3. Per la versione console:
-   - Carica `tools/launcher_template_console.bat`
-   - Configura le impostazioni:
-     - Titolo: "Onion Desktop Tools - With Console"
-     - Applicazione invisibile: No
-     - Privilegi amministratore: Sì
-   - Salva come: `Onion Desktop Tools - WithConsole.exe`
+### Istruzioni Passo-Passo
+
+#### Per la Versione Console Nascosta:
+
+1. **Apri** `tools/Bat_To_Exe_Converter.exe`
+2. **Clicca "Open"** e seleziona `tools/launcher_template_hidden.bat`
+3. **Configura le impostazioni** nell'interfaccia Bat_To_Exe_Converter:
+   - **Titolo/Nome finestra**: Inserisci `Onion Desktop Tools` (con spazi - IMPORTANTE!)
+   - **Applicazione invisibile**: Attiva/Seleziona questa opzione
+   - **Privilegi amministratore**: Attiva/Seleziona questa opzione
+   - **Icona**: Seleziona `tools/res/onion.ico` se disponibile
+4. **Clicca "Compile"** o "Build"
+5. **Salva come**: `Onion Desktop Tools.exe` (nella directory principale)
+
+#### Per la Versione Console:
+
+1. **Apri** `tools/Bat_To_Exe_Converter.exe`
+2. **Clicca "Open"** e seleziona `tools/launcher_template_console.bat`
+3. **Configura le impostazioni** nell'interfaccia Bat_To_Exe_Converter:
+   - **Titolo/Nome finestra**: Inserisci `Onion Desktop Tools - With Console` (con spazi - IMPORTANTE!)
+   - **Applicazione invisibile**: Disattiva questa opzione
+   - **Privilegi amministratore**: Attiva/Seleziona questa opzione
+   - **Icona**: Seleziona `tools/res/onion.ico` se disponibile
+4. **Clicca "Compile"** o "Build"
+5. **Salva come**: `Onion Desktop Tools - WithConsole.exe` (nella directory principale)
+
+### Errori Comuni da Evitare:
+
+⚠️ **CRITICO**: Assicurati che il campo Titolo includa gli spazi: `Onion Desktop Tools`
+- ❌ SBAGLIATO: `OnionDesktopTools` (senza spazi)
+- ✅ CORRETTO: `Onion Desktop Tools` (con spazi)
+
+Senza una spaziatura corretta nel titolo, la finestra .exe mostrerà il testo senza spazi, rendendolo difficile da leggere.
+
+## Risoluzione dei Problemi
+
+### Problema: Il titolo della finestra mostra testo senza spazi (es. "OnionDesktopTools")
+
+**Causa**: Il file .exe è stato creato con un campo titolo che non includeva gli spazi corretti.
+
+**Soluzione**: Rigenera i file .exe seguendo le istruzioni sopra, assicurandoti di inserire il titolo CON gli spazi: `Onion Desktop Tools`
+
+### Problema: La finestra mostra testo in inglese anche quando è selezionato l'italiano in config.json
+
+**Causa**: Questo è il comportamento previsto per il titolo della finestra del file .exe. Il titolo della finestra è incorporato nei metadati del .exe.
+
+**Soluzione**: 
+- L'interfaccia PowerShell (Menu.ps1) verrà visualizzata nella lingua selezionata da config.json
+- Solo il titolo iniziale della finestra della console proviene dai metadati del .exe
+- Per evitare confusione, usa invece i launcher .bat, che non incorporano un titolo fisso
+
+### Verifica
+
+Dopo aver rigenerato i file .exe, verifica che funzionino correttamente:
+
+1. Fai doppio clic sul file .exe
+2. La finestra della console (se visibile) dovrebbe mostrare un titolo formattato correttamente con gli spazi
+3. L'interfaccia GUI PowerShell dovrebbe apparire con la lingua selezionata da config.json
+4. Tutto il testo nell'interfaccia GUI dovrebbe essere nella lingua scelta
 
 ## Metodi di Avvio Alternativi
 
