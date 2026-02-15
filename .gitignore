@@ -17,6 +17,11 @@ downloads/ODT_updates/
 backups/*
 !backups/.gitkeep
 
+# Test results and coverage
+Tests/testresults.*
+Tests/coverage.xml
+Tests/*.trx
+
 # Windows thumbnail cache
 Thumbs.db
 ehthumbs.db

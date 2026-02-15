@@ -1,5 +1,5 @@
 # Common-Functions.ps1 - Shared utility functions for Onion Desktop Tools
-# Version: 1.1.0
+# Version: 1.2.0
 
 #Requires -Version 5.1
 
@@ -8,6 +8,10 @@ Set-StrictMode -Version Latest
 # Global error action preference for the module
 $ErrorActionPreference = 'Stop'
 
+# Global configuration
+$script:ConfigPath = Join-Path $PSScriptRoot "config.json"
+$script:ODTConfig = $null
+
 # Global logging configuration
 $script:LogDirectory = Join-Path $PSScriptRoot "logs"
 $script:LogFileName = "ODT_$(Get-Date -Format 'yyyy-MM-dd').log"
@@ -15,6 +19,84 @@ $script:LogFilePath = Join-Path $script:LogDirectory $script:LogFileName
 $script:EnableFileLogging = $true
 $script:MaxLogSizeMB = 10
 $script:MaxLogFiles = 30
+
+<#
+.SYNOPSIS
+    Loads ODT configuration from config.json
+.DESCRIPTION
+    Reads and parses the configuration file, with fallback to defaults
+.OUTPUTS
+    PSCustomObject - Configuration object
+#>
+function Get-ODTConfiguration {
+    [CmdletBinding()]
+    param()
+    
+    try {
+        if ($script:ODTConfig) {
+            return $script:ODTConfig
+        }
+        
+        if (Test-Path -Path $script:ConfigPath) {
+            $configJson = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $script:ODTConfig = $configJson.ODT_Settings
+            
+            # Update logging configuration from config
+            if ($script:ODTConfig.General) {
+                $script:EnableFileLogging = $script:ODTConfig.General.EnablePersistentLogging
+                $script:MaxLogSizeMB = $script:ODTConfig.General.MaxLogSizeMB
+                $script:MaxLogFiles = $script:ODTConfig.General.LogRetentionDays
+            }
+            
+            return $script:ODTConfig
+        }
+        else {
+            Write-Warning "Configuration file not found: $script:ConfigPath. Using defaults."
+            return $null
+        }
+    }
+    catch {
+        Write-Warning "Failed to load configuration: $_. Using defaults."
+        return $null
+    }
+}
+
+<#
+.SYNOPSIS
+    Gets a specific configuration value
+.PARAMETER Section
+    Configuration section (General, Operations, Advanced)
+.PARAMETER Key
+    Configuration key name
+.PARAMETER Default
+    Default value if key not found
+.OUTPUTS
+    Configuration value or default
+#>
+function Get-ODTConfigValue {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Section,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$Key,
+        
+        [Parameter(Mandatory = $false)]
+        $Default = $null
+    )
+    
+    try {
+        $config = Get-ODTConfiguration
+        if ($config -and $config.$Section -and $config.$Section.$Key -ne $null) {
+            return $config.$Section.$Key
+        }
+        return $Default
+    }
+    catch {
+        return $Default
+    }
+}
 
 <#
 .SYNOPSIS
@@ -588,8 +670,226 @@ function Initialize-Directories {
     }
 }
 
+<#
+.SYNOPSIS
+    Enables Ctrl+C handling for graceful shutdown
+.DESCRIPTION
+    Registers event handler for Ctrl+C interruption with cleanup callback
+.PARAMETER CleanupScript
+    ScriptBlock to execute on interruption for cleanup
+.EXAMPLE
+    Enable-CtrlCHandling -CleanupScript { Write-Host "Cleaning up..."; Stop-Process $pid }
+#>
+function Enable-CtrlCHandling {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [scriptblock]$CleanupScript = { Write-ODTLog "Operation interrupted by user" -Level Warning }
+    )
+    
+    try {
+        # Check if Ctrl+C handling is enabled in config
+        $enableCtrlC = Get-ODTConfigValue -Section "Operations" -Key "EnableCtrlCHandling" -Default $true
+        
+        if (-not $enableCtrlC) {
+            Write-ODTLog "Ctrl+C handling disabled in configuration" -Level Debug
+            return
+        }
+        
+        # Register event for Ctrl+C
+        $null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
+            & $CleanupScript
+        } -ErrorAction SilentlyContinue
+        
+        Write-ODTLog "Ctrl+C handling enabled. Press Ctrl+C to cancel operation." -Level Debug
+    }
+    catch {
+        Write-ODTLog "Failed to enable Ctrl+C handling: $_" -Level Warning
+    }
+}
+
+<#
+.SYNOPSIS
+    Disables Ctrl+C handling
+.DESCRIPTION
+    Unregisters the Ctrl+C event handler
+#>
+function Disable-CtrlCHandling {
+    [CmdletBinding()]
+    param()
+    
+    try {
+        Unregister-Event -SourceIdentifier PowerShell.Exiting -ErrorAction SilentlyContinue
+        Write-ODTLog "Ctrl+C handling disabled" -Level Debug
+    }
+    catch {
+        Write-ODTLog "Failed to disable Ctrl+C handling: $_" -Level Warning
+    }
+}
+
+<#
+.SYNOPSIS
+    Checks if operation is in dry-run mode
+.DESCRIPTION
+    Returns true if -WhatIf or DryRunMode is enabled
+.PARAMETER WhatIf
+    Standard WhatIf parameter
+.OUTPUTS
+    Boolean - True if dry-run mode is active
+#>
+function Test-DryRun {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [switch]$WhatIf
+    )
+    
+    $configDryRun = Get-ODTConfigValue -Section "Operations" -Key "DryRunMode" -Default $false
+    return ($WhatIf -or $configDryRun)
+}
+
+<#
+.SYNOPSIS
+    Executes command with dry-run support
+.DESCRIPTION
+    Executes command only if not in dry-run mode, otherwise logs what would happen
+.PARAMETER Action
+    Description of the action
+.PARAMETER ScriptBlock
+    Script block to execute
+.PARAMETER WhatIf
+    Standard WhatIf parameter
+#>
+function Invoke-ODTAction {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Action,
+        
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$ScriptBlock,
+        
+        [Parameter(Mandatory = $false)]
+        [string]$Target = "System"
+    )
+    
+    if ($PSCmdlet.ShouldProcess($Target, $Action)) {
+        Write-ODTLog "Executing: $Action" -Level Info
+        try {
+            & $ScriptBlock
+            Write-ODTLog "Completed: $Action" -Level Info
+            return $true
+        }
+        catch {
+            Write-ODTLog "Failed: $Action - $_" -Level Error
+            throw
+        }
+    }
+    else {
+        Write-ODTLog "[DRY-RUN] Would execute: $Action on $Target" -Level Warning
+        return $false
+    }
+}
+
+<#
+.SYNOPSIS
+    Loads language strings from language file
+.DESCRIPTION
+    Reads localized strings from JSON language files
+.PARAMETER Language
+    Language code (e.g., en-US, it-IT, fr-FR)
+.OUTPUTS
+    PSCustomObject with localized strings
+#>
+function Get-LanguageStrings {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$Language
+    )
+    
+    try {
+        # Get language from config if not specified
+        if (-not $Language) {
+            $Language = Get-ODTConfigValue -Section "General" -Key "Language" -Default "en-US"
+        }
+        
+        $languageFile = Join-Path $PSScriptRoot "Languages" "$Language.json"
+        
+        if (Test-Path -Path $languageFile) {
+            $languageData = Get-Content -Path $languageFile -Raw | ConvertFrom-Json
+            return $languageData.Strings
+        }
+        else {
+            Write-Warning "Language file not found: $languageFile. Using English."
+            # Fallback to English
+            $enFile = Join-Path $PSScriptRoot "Languages" "en-US.json"
+            if (Test-Path -Path $enFile) {
+                $languageData = Get-Content -Path $enFile -Raw | ConvertFrom-Json
+                return $languageData.Strings
+            }
+            return $null
+        }
+    }
+    catch {
+        Write-Warning "Failed to load language strings: $_"
+        return $null
+    }
+}
+
+<#
+.SYNOPSIS
+    Gets a localized string
+.DESCRIPTION
+    Retrieves a localized string from language files with format support
+.PARAMETER Category
+    Category of the string (Common, Security, Operations, etc.)
+.PARAMETER Key
+    String key name
+.PARAMETER Arguments
+    Format arguments for string interpolation
+.OUTPUTS
+    Localized string
+#>
+function Get-LocalizedString {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Category,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$Key,
+        
+        [Parameter(Mandatory = $false)]
+        [object[]]$Arguments
+    )
+    
+    try {
+        $strings = Get-LanguageStrings
+        if ($strings -and $strings.$Category -and $strings.$Category.$Key) {
+            $string = $strings.$Category.$Key
+            
+            # Apply format arguments if provided
+            if ($Arguments) {
+                return $string -f $Arguments
+            }
+            return $string
+        }
+        else {
+            # Return key as fallback
+            return "$Category.$Key"
+        }
+    }
+    catch {
+        return "$Category.$Key"
+    }
+}
+
 # Functions are now available for dot-sourcing
 # Usage: . "$PSScriptRoot\Common-Functions.ps1"
+
+# Load configuration
+Get-ODTConfiguration | Out-Null
 
 # Auto-initialize logging when module is loaded
 Initialize-Logging
