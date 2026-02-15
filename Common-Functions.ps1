@@ -1,5 +1,5 @@
 # Common-Functions.ps1 - Shared utility functions for Onion Desktop Tools
-# Version: 1.0.0
+# Version: 1.1.0
 
 #Requires -Version 5.1
 
@@ -7,6 +7,68 @@ Set-StrictMode -Version Latest
 
 # Global error action preference for the module
 $ErrorActionPreference = 'Stop'
+
+# Global logging configuration
+$script:LogDirectory = Join-Path $PSScriptRoot "logs"
+$script:LogFileName = "ODT_$(Get-Date -Format 'yyyy-MM-dd').log"
+$script:LogFilePath = Join-Path $script:LogDirectory $script:LogFileName
+$script:EnableFileLogging = $true
+$script:MaxLogSizeMB = 10
+$script:MaxLogFiles = 30
+
+<#
+.SYNOPSIS
+    Initializes the logging system
+.DESCRIPTION
+    Creates log directory, sets up log file, and performs log rotation
+#>
+function Initialize-Logging {
+    [CmdletBinding()]
+    param()
+    
+    try {
+        # Create logs directory if it doesn't exist
+        if (-not (Test-Path -Path $script:LogDirectory -PathType Container)) {
+            New-Item -ItemType Directory -Path $script:LogDirectory -Force | Out-Null
+        }
+        
+        # Perform log rotation - keep only last N days
+        $logFiles = Get-ChildItem -Path $script:LogDirectory -Filter "ODT_*.log" -ErrorAction SilentlyContinue
+        if ($logFiles) {
+            $oldLogs = $logFiles | Sort-Object LastWriteTime -Descending | Select-Object -Skip $script:MaxLogFiles
+            foreach ($oldLog in $oldLogs) {
+                try {
+                    Remove-Item -Path $oldLog.FullName -Force -ErrorAction SilentlyContinue
+                } catch {
+                    # Silently ignore if can't delete old log
+                }
+            }
+        }
+        
+        # Check current log size and rotate if needed
+        if (Test-Path -Path $script:LogFilePath) {
+            $logSize = (Get-Item -Path $script:LogFilePath).Length / 1MB
+            if ($logSize -gt $script:MaxLogSizeMB) {
+                $timestamp = Get-Date -Format 'HHmmss'
+                $rotatedName = "ODT_$(Get-Date -Format 'yyyy-MM-dd')_$timestamp.log"
+                $rotatedPath = Join-Path $script:LogDirectory $rotatedName
+                Move-Item -Path $script:LogFilePath -Destination $rotatedPath -Force -ErrorAction SilentlyContinue
+            }
+        }
+        
+        # Write initialization marker
+        if ($script:EnableFileLogging) {
+            $initMsg = "`n" + ("=" * 80) + "`n"
+            $initMsg += "Onion Desktop Tools - Session Started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n"
+            $initMsg += ("=" * 80) + "`n"
+            Add-Content -Path $script:LogFilePath -Value $initMsg -ErrorAction SilentlyContinue
+        }
+    }
+    catch {
+        Write-Warning "Failed to initialize logging: $_"
+        $script:EnableFileLogging = $false
+    }
+}
 
 <#
 .SYNOPSIS
@@ -174,13 +236,15 @@ function Test-FileHash {
 .SYNOPSIS
     Writes a log message to both console and log file
 .DESCRIPTION
-    Provides centralized logging with timestamps and levels
+    Provides centralized logging with timestamps and levels, with automatic file logging
 .PARAMETER Message
     The message to log
 .PARAMETER Level
-    Log level (Info, Warning, Error)
+    Log level (Info, Warning, Error, Debug)
 .PARAMETER LogFile
-    Path to log file (optional)
+    Optional path to specific log file (overrides default)
+.PARAMETER NoConsole
+    If set, suppresses console output (file only)
 #>
 function Write-ODTLog {
     [CmdletBinding()]
@@ -193,27 +257,42 @@ function Write-ODTLog {
         [string]$Level = 'Info',
         
         [Parameter(Mandatory = $false)]
-        [string]$LogFile
+        [string]$LogFile,
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$NoConsole
     )
     
     $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $logMessage = "[$timestamp] [$Level] $Message"
     
-    # Write to console with appropriate color
-    switch ($Level) {
-        'Error' { Write-Host $logMessage -ForegroundColor Red }
-        'Warning' { Write-Host $logMessage -ForegroundColor Yellow }
-        'Debug' { Write-Verbose $logMessage }
-        default { Write-Host $logMessage }
+    # Write to console unless suppressed
+    if (-not $NoConsole) {
+        switch ($Level) {
+            'Error' { Write-Host $logMessage -ForegroundColor Red }
+            'Warning' { Write-Host $logMessage -ForegroundColor Yellow }
+            'Debug' { Write-Verbose $logMessage }
+            default { Write-Host $logMessage }
+        }
     }
     
-    # Write to file if specified
-    if ($LogFile) {
+    # Write to file
+    $targetLogFile = if ($LogFile) { $LogFile } else { $script:LogFilePath }
+    
+    if ($script:EnableFileLogging -or $LogFile) {
         try {
-            Add-Content -Path $LogFile -Value $logMessage -ErrorAction Stop
+            # Ensure log directory exists
+            $logDir = Split-Path -Path $targetLogFile -Parent
+            if ($logDir -and -not (Test-Path -Path $logDir -PathType Container)) {
+                New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+            }
+            
+            Add-Content -Path $targetLogFile -Value $logMessage -ErrorAction Stop
         }
         catch {
-            Write-Warning "Failed to write to log file: $_"
+            if (-not $NoConsole) {
+                Write-Warning "Failed to write to log file: $_"
+            }
         }
     }
 }
@@ -323,6 +402,117 @@ function Test-RequiredTools {
 
 <#
 .SYNOPSIS
+    Verifies tools against the manifest
+.DESCRIPTION
+    Checks tool integrity by comparing SHA256 hashes against tools_manifest.json
+.PARAMETER ToolsPath
+    Path to the tools directory
+.PARAMETER ManifestPath
+    Path to the tools manifest JSON file
+.PARAMETER VerifyOptional
+    If set, also verifies optional tools
+.OUTPUTS
+    PSCustomObject with verification results
+#>
+function Test-ToolsIntegrity {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$ToolsPath = ".\tools",
+        
+        [Parameter(Mandatory = $false)]
+        [string]$ManifestPath = ".\tools_manifest.json",
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$VerifyOptional
+    )
+    
+    $result = [PSCustomObject]@{
+        Success = $true
+        RequiredMissing = @()
+        OptionalMissing = @()
+        HashMismatches = @()
+        VerifiedCount = 0
+        TotalRequired = 0
+    }
+    
+    try {
+        if (-not (Test-Path -Path $ManifestPath)) {
+            Write-ODTLog "Tools manifest not found: $ManifestPath" -Level Warning
+            return $result
+        }
+        
+        $manifest = Get-Content -Path $ManifestPath -Raw | ConvertFrom-Json
+        Write-ODTLog "Verifying tools against manifest v$($manifest.manifest_version)" -Level Debug
+        
+        foreach ($tool in $manifest.tools) {
+            # Skip optional tools unless requested
+            if (-not $tool.required -and -not $VerifyOptional) {
+                continue
+            }
+            
+            if ($tool.required) {
+                $result.TotalRequired++
+            }
+            
+            # Handle tools in subdirectories (e.g., LockHunter/LockHunter32.exe)
+            $toolPath = if ($tool.name -like "*/*") {
+                Join-Path -Path $ToolsPath -ChildPath $tool.name
+            } else {
+                Join-Path -Path $ToolsPath -ChildPath $tool.name
+            }
+            
+            # Check if tool exists
+            if (-not (Test-Path -Path $toolPath)) {
+                if ($tool.required) {
+                    $result.RequiredMissing += $tool.name
+                    $result.Success = $false
+                    Write-ODTLog "Required tool missing: $($tool.name)" -Level Warning
+                } else {
+                    $result.OptionalMissing += $tool.name
+                    Write-ODTLog "Optional tool missing: $($tool.name)" -Level Debug
+                }
+                continue
+            }
+            
+            # Verify hash if provided in manifest
+            if ($tool.sha256) {
+                try {
+                    $actualHash = (Get-FileHash -Path $toolPath -Algorithm SHA256).Hash
+                    if ($actualHash -ne $tool.sha256) {
+                        $result.HashMismatches += [PSCustomObject]@{
+                            Tool = $tool.name
+                            Expected = $tool.sha256
+                            Actual = $actualHash
+                        }
+                        $result.Success = $false
+                        Write-ODTLog "Hash mismatch for $($tool.name)" -Level Warning
+                    } else {
+                        $result.VerifiedCount++
+                        Write-ODTLog "Verified: $($tool.name)" -Level Debug
+                    }
+                } catch {
+                    Write-ODTLog "Failed to verify hash for $($tool.name): $_" -Level Warning
+                }
+            }
+        }
+        
+        if ($result.Success) {
+            Write-ODTLog "Tools integrity verification passed ($($result.VerifiedCount) tools verified)" -Level Info
+        } else {
+            Write-ODTLog "Tools integrity verification FAILED" -Level Error
+        }
+        
+    } catch {
+        Write-ODTLog "Error verifying tools integrity: $_" -Level Error
+        $result.Success = $false
+    }
+    
+    return $result
+}
+
+<#
+.SYNOPSIS
     Creates necessary directories if they don't exist
 .DESCRIPTION
     Ensures required directories exist with proper error handling
@@ -352,3 +542,6 @@ function Initialize-Directories {
 
 # Functions are now available for dot-sourcing
 # Usage: . "$PSScriptRoot\Common-Functions.ps1"
+
+# Auto-initialize logging when module is loaded
+Initialize-Logging

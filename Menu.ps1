@@ -45,8 +45,26 @@ if (-not (Test-RequiredTools -ToolsPath ".\tools")) {
         [System.Windows.Forms.MessageBoxIcon]::Warning
     )
     if ($msgResult -eq [System.Windows.Forms.DialogResult]::No) {
+        Write-ODTLog "Application terminated due to missing tools" -Level Warning
         exit 1
     }
+}
+
+# Verify tools integrity (optional, don't block on failure)
+try {
+    $integrityResult = Test-ToolsIntegrity -ToolsPath ".\tools" -ManifestPath ".\tools_manifest.json"
+    if (-not $integrityResult.Success) {
+        Write-ODTLog "Tools integrity check warnings detected" -Level Warning
+        if ($integrityResult.RequiredMissing.Count -gt 0) {
+            Write-ODTLog "Missing required tools: $($integrityResult.RequiredMissing -join ', ')" -Level Warning
+        }
+        if ($integrityResult.HashMismatches.Count -gt 0) {
+            Write-ODTLog "Hash mismatches detected for $($integrityResult.HashMismatches.Count) tool(s)" -Level Warning
+            # Don't block on hash mismatches, just log them
+        }
+    }
+} catch {
+    Write-ODTLog "Tools integrity verification failed: $_" -Level Debug
 }
 
 # Read the Menu.ps1 file and get the version number from the first line
