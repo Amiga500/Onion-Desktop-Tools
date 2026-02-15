@@ -7,6 +7,22 @@ Onion Desktop Tools is a Windows program that simplifies the preparation of a mi
 
 Onion Desktop Tools will help you to format the SD card, download, install, update and configure Onion in an really easy way.
 
+## ⚠️ Important Security Notes
+
+**This tool performs destructive disk operations. Please read carefully:**
+
+- ✅ **Run as Administrator**: Required for disk operations
+- ✅ **Verify selected disk**: Double-check you've selected the correct SD card before formatting
+- ✅ **Backup important data**: Always backup your data before formatting
+- ✅ **System disk protection**: The tool includes checks to prevent formatting system disks, but always verify manually
+- ✅ **Antivirus warnings**: Some antivirus may flag the tool due to disk operations - this is expected behavior
+
+**Best Practices:**
+1. Remove unnecessary USB drives before running the tool
+2. Verify the drive letter and size match your SD card
+3. Use genuine, high-quality SD cards (avoid stock SD cards for best results)
+4. Keep backups of your ROM saves using the built-in backup feature
+
 # Features : 
 - auto update itself
 - format SD card in FAT32
@@ -19,7 +35,16 @@ Onion Desktop Tools will help you to format the SD card, download, install, upda
 - Onion OS wifi Manager
 
 ------------------------------------------------
-# Presentation : 
+
+# System Requirements
+
+- Windows 10 or later
+- PowerShell 5.1 or later (included in Windows 10+)
+- Administrator privileges
+- SD card reader
+- Internet connection (for downloading Onion OS)
+
+# Features : 
 A tutorial video about Onion Desktop Tool, it describes the process for preparing a new fresh SD card (click on the picture to view it) :
 
 [![Onion Desktop Tool - Video Presentation](https://img.youtube.com/vi/moE52Dw2x64/0.jpg)](https://youtu.be/moE52Dw2x64])
@@ -36,6 +61,26 @@ An advanced tutorial video about Onion Desktop Tool,  (click on the picture to v
 [![Onion Desktop Tool - Video Presentation](https://img.youtube.com/vi/QyzKe8Lqdi8/0.jpg)](https://youtu.be/QyzKe8Lqdi8])
 
 ------------------------------------------------
+
+# Security & Error Handling
+
+**Recent Improvements (v0.0.10+):**
+- ✅ Enhanced disk validation to prevent accidental system disk formatting
+- ✅ Comprehensive error handling with detailed logging
+- ✅ SHA256 hash computation for downloaded files (manual verification)
+- ✅ Administrator privilege verification
+- ✅ Improved error messages for troubleshooting
+
+**Logging:**
+- All operations are logged to console with timestamps
+- Optional persistent logging available
+- Error details include actionable troubleshooting steps
+
+For detailed security analysis and code quality review, see [CODE_REVIEW.md](CODE_REVIEW.md).
+
+------------------------------------------------
+
+# Presentation :
 
 # Dev informations : 
 Onion Desktop Tools is developped in powershell.
