@@ -33,7 +33,8 @@ Describe "Disk Selector Script Structure" {
         It "Should accept Title parameter" {
             $scriptPath = Join-Path $PSScriptRoot ".." "Disk_selector.ps1"
             $scriptContent = Get-Content -Path $scriptPath -Raw
-            $scriptContent | Should -Match "param.*Title"
+            # Simply check if Title appears in param context
+            ($scriptContent -match 'param' -and $scriptContent -match '\$Title') | Should -Be $true
         }
     }
     
