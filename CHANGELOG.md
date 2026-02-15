@@ -7,7 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Security & Quality Improvements
 
-### Added
+### Added - Phase 2 (2026-02-15)
+- **Persistent Logging System**
+  - Automatic daily log files in `logs/` directory
+  - Log file rotation (keeps 30 days of logs)
+  - Size-based rotation (10MB limit per file)
+  - Session markers in logs for easy debugging
+  - `Initialize-Logging()` function for setup
+- **Tools Integrity Verification**
+  - `tools_manifest.json` with SHA256 checksums for all 10 external tools
+  - Required vs optional tool classification
+  - Source URLs and version documentation
+  - `Test-ToolsIntegrity()` function for verification on startup
+  - Warns on hash mismatches but doesn't block operation
+- **Enhanced File Verification**
+  - Improved `Test-FileHash()` with detailed result objects
+  - Automatic size verification against GitHub asset info
+  - Hash computation with logging
+  - Integration with download verification
+- **.gitignore File**
+  - Excludes logs directory
+  - Excludes downloaded zip files
+  - Excludes temporary and backup files
+  - Prevents committing user-specific data
+
+### Added - Phase 1 (2026-02-15)
 - **CRITICAL**: New `Common-Functions.ps1` module with security utilities
 - **CRITICAL**: `Test-IsSafeDiskToFormat()` function to prevent formatting system disks
   - Checks for system drive (C:)

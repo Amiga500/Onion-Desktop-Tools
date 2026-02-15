@@ -185,15 +185,18 @@ function Test-IsSafeDiskToFormat {
 .SYNOPSIS
     Validates hash/checksum of a downloaded file
 .DESCRIPTION
-    Computes and verifies the hash of a file against an expected value
+    Computes and verifies the hash of a file against an expected value.
+    Can also verify against GitHub release asset if asset info provided.
 .PARAMETER FilePath
     Path to the file to verify
 .PARAMETER ExpectedHash
-    Expected hash value
+    Expected hash value (optional if AssetInfo provided)
 .PARAMETER Algorithm
     Hash algorithm to use (default: SHA256)
+.PARAMETER AssetInfo
+    GitHub asset info object from API (contains size for verification)
 .OUTPUTS
-    Boolean - True if hash matches, False otherwise
+    PSCustomObject with verification results
 #>
 function Test-FileHash {
     [CmdletBinding()]
@@ -201,34 +204,79 @@ function Test-FileHash {
         [Parameter(Mandatory = $true)]
         [string]$FilePath,
         
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string]$ExpectedHash,
         
         [Parameter(Mandatory = $false)]
         [ValidateSet('SHA256', 'SHA1', 'MD5')]
-        [string]$Algorithm = 'SHA256'
+        [string]$Algorithm = 'SHA256',
+        
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$AssetInfo
     )
+    
+    $result = [PSCustomObject]@{
+        Success = $false
+        FileExists = $false
+        SizeMatch = $false
+        HashMatch = $false
+        ActualHash = $null
+        ExpectedHash = $ExpectedHash
+        ActualSize = 0
+        ExpectedSize = 0
+        Message = ""
+    }
     
     try {
         if (-not (Test-Path -Path $FilePath)) {
-            Write-Error "File not found: $FilePath"
-            return $false
+            $result.Message = "File not found: $FilePath"
+            Write-ODTLog $result.Message -Level Warning
+            return $result
         }
         
-        $actualHash = (Get-FileHash -Path $FilePath -Algorithm $Algorithm).Hash
-        $match = $actualHash -eq $ExpectedHash
+        $result.FileExists = $true
+        $fileInfo = Get-Item -Path $FilePath
+        $result.ActualSize = $fileInfo.Length
         
-        if (-not $match) {
-            Write-Warning "Hash mismatch for $FilePath"
-            Write-Warning "Expected: $ExpectedHash"
-            Write-Warning "Actual: $actualHash"
+        # Check size if asset info provided
+        if ($AssetInfo -and $AssetInfo.size) {
+            $result.ExpectedSize = $AssetInfo.size
+            if ($result.ActualSize -eq $result.ExpectedSize) {
+                $result.SizeMatch = $true
+                Write-ODTLog "File size matches expected: $($result.ActualSize) bytes" -Level Debug
+            } else {
+                $result.Message = "Size mismatch: expected $($result.ExpectedSize) bytes, got $($result.ActualSize) bytes"
+                Write-ODTLog $result.Message -Level Warning
+                return $result
+            }
         }
         
-        return $match
+        # Compute hash
+        $result.ActualHash = (Get-FileHash -Path $FilePath -Algorithm $Algorithm -ErrorAction Stop).Hash
+        Write-ODTLog "Computed $Algorithm hash: $($result.ActualHash)" -Level Debug
+        
+        # Verify hash if expected hash provided
+        if ($ExpectedHash) {
+            $result.HashMatch = ($result.ActualHash -eq $ExpectedHash)
+            
+            if (-not $result.HashMatch) {
+                $result.Message = "Hash mismatch: expected $ExpectedHash, got $($result.ActualHash)"
+                Write-ODTLog $result.Message -Level Warning
+                return $result
+            } else {
+                Write-ODTLog "Hash verification passed" -Level Info
+            }
+        }
+        
+        $result.Success = $result.FileExists -and ($result.SizeMatch -or -not $AssetInfo) -and ($result.HashMatch -or -not $ExpectedHash)
+        $result.Message = if ($result.Success) { "File verification passed" } else { "Verification incomplete" }
+        
+        return $result
     }
     catch {
-        Write-Error "Error computing file hash: $_"
-        return $false
+        $result.Message = "Error during file verification: $_"
+        Write-ODTLog $result.Message -Level Error
+        return $result
     }
 }
 

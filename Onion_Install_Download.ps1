@@ -152,13 +152,20 @@ function Download-Button_Click {
         Write-Host "File size already OK ! ($Downloaded_size Bytes)"
         $DL_Lbl.Text = "File size already OK ! ($Downloaded_size Bytes)"
         
-        # Compute and display file hash for verification
+        # Verify file integrity using enhanced Test-FileHash
         try {
-            $fileHash = (Get-FileHash -Path "downloads\$Update_FileName" -Algorithm SHA256).Hash
-            Write-Host "File SHA256 hash: $fileHash"
-            Write-ODTLog "Downloaded file hash: $fileHash" -Level Info
+            $verifyResult = Test-FileHash -FilePath "downloads\$Update_FileName" -AssetInfo $asset
+            if ($verifyResult.Success) {
+                Write-Host "File verification passed"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-ODTLog "Download verified: $Update_FileName - Hash: $($verifyResult.ActualHash)" -Level Info
+            } else {
+                Write-Warning "File verification incomplete: $($verifyResult.Message)"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-ODTLog "Verification warning for $Update_FileName : $($verifyResult.Message)" -Level Warning
+            }
         } catch {
-            Write-Warning "Could not compute file hash: $_"
+            Write-Warning "Could not verify file: $_"
         }
         
         $DownloadButton.enabled = 1
@@ -214,14 +221,22 @@ function Download-Button_Click {
         Write-Host "File size OK! ($Downloaded_size)"
         $DL_Lbl.Text = "Download successful."
         
-        # Compute and display file hash for verification
+        # Verify file integrity using enhanced Test-FileHash
         try {
-            $fileHash = (Get-FileHash -Path "downloads\$Update_FileName" -Algorithm SHA256).Hash
-            Write-Host "File SHA256 hash: $fileHash"
-            Write-Host "Please verify this hash matches the official release if security is critical."
-            Write-ODTLog "Downloaded file: $Update_FileName - Hash: $fileHash" -Level Info
+            $verifyResult = Test-FileHash -FilePath "downloads\$Update_FileName" -AssetInfo $asset
+            if ($verifyResult.Success) {
+                Write-Host "File verification passed"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-ODTLog "Download verified: $Update_FileName - Size: $Downloaded_size bytes, Hash: $($verifyResult.ActualHash)" -Level Info
+            } else {
+                Write-Warning "File verification incomplete: $($verifyResult.Message)"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-Host "Please verify this hash matches the official release if security is critical."
+                Write-ODTLog "Verification warning for $Update_FileName : $($verifyResult.Message)" -Level Warning
+            }
         } catch {
-            Write-Warning "Could not compute file hash for verification: $_"
+            Write-Warning "Could not verify file: $_"
+            Write-Host "Please manually verify the downloaded file."
         }
         
         #Start-Sleep -Seconds 3
