@@ -96,6 +96,23 @@ An advanced tutorial video about Onion Desktop Tool,  (click on the picture to v
 
 For detailed security analysis and code quality review, see [CODE_REVIEW.md](CODE_REVIEW.md).
 
+### Testing
+
+**Comprehensive Test Suite:**
+- **186 tests** across 7 test files (93% pass rate)
+- Coverage: Disk operations, downloads, extraction, configuration, integration
+- Run tests: `.\Run-Tests.ps1`
+- Test documentation: See [Tests/TEST_SUMMARY.md](Tests/TEST_SUMMARY.md)
+
+**Test Suites:**
+- Common-Functions.Tests.ps1 (15 tests) - Core utilities
+- Disk_Format.Tests.ps1 (32 tests) - Format operations & safety
+- Disk_selector.Tests.ps1 (28 tests) - Disk selection GUI
+- Onion_Install_Download.Tests.ps1 (38 tests) - Download operations
+- Onion_Install_Extract.Tests.ps1 (32 tests) - Extraction operations
+- Onion_Config.Tests.ps1 (32 tests) - Configuration management
+- Integration.Tests.ps1 (24 tests) - End-to-end workflows
+
 **Configuration & Testing:**
 - Configurable behavior via `config.json` (ODT_Settings section)
 - Run tests: `.\Run-Tests.ps1` (requires Pester framework)
