@@ -1,0 +1,59 @@
+{
+  "Language": "English (US)",
+  "LanguageCode": "en-US",
+  "Strings": {
+    "Common": {
+      "Yes": "Yes",
+      "No": "No",
+      "Cancel": "Cancel",
+      "Continue": "Continue",
+      "Error": "Error",
+      "Warning": "Warning",
+      "Success": "Success",
+      "Info": "Information"
+    },
+    "Security": {
+      "AdminRequired": "Administrator privileges are required to run this operation.",
+      "SystemDiskWarning": "WARNING: This appears to be a system disk. Formatting will destroy your Windows installation!",
+      "DiskValidationFailed": "Disk validation failed. Cannot proceed with format operation.",
+      "ConfirmDestructive": "This operation is destructive and cannot be undone. Are you sure you want to continue?"
+    },
+    "Logging": {
+      "LoggingInitialized": "Logging system initialized",
+      "LogRotationComplete": "Log rotation complete",
+      "LogFileCreated": "Log file created: {0}"
+    },
+    "Configuration": {
+      "ConfigLoaded": "Configuration loaded successfully",
+      "ConfigLoadFailed": "Failed to load configuration, using defaults",
+      "ConfigNotFound": "Configuration file not found: {0}"
+    },
+    "Operations": {
+      "DryRunMode": "[DRY-RUN] Would execute: {0}",
+      "OperationStarted": "Operation started: {0}",
+      "OperationCompleted": "Operation completed: {0}",
+      "OperationFailed": "Operation failed: {0}",
+      "OperationCancelled": "Operation cancelled by user"
+    },
+    "Download": {
+      "DownloadStarted": "Download started: {0}",
+      "DownloadComplete": "Download complete: {0}",
+      "DownloadFailed": "Download failed: {0}",
+      "HashVerification": "Verifying file integrity (SHA256)...",
+      "HashMatch": "Hash verification passed",
+      "HashMismatch": "Hash verification failed! File may be corrupted."
+    },
+    "Format": {
+      "FormatStarted": "Format operation started on disk {0}",
+      "FormatComplete": "Format operation completed successfully",
+      "FormatFailed": "Format operation failed: {0}",
+      "DiskTooLarge": "Warning: Disk is larger than 512GB. Please verify this is the correct SD card."
+    },
+    "Tests": {
+      "TestsPassed": "All tests passed!",
+      "TestsFailed": "Some tests failed",
+      "RunningTests": "Running tests...",
+      "TestSummary": "Test Results Summary"
+    }
+  }
+}

@@ -1,9 +1,13 @@
 # Onion Emulators and Apps Manager
 
+#Requires -Version 5.1
+
 param (
     [Parameter(Mandatory = $false)]
     [string]$Target
 )
+
+Set-StrictMode -Version Latest
 
 $SdCard_Version = ""
 $SdCardState = ""
@@ -11,6 +15,12 @@ $ScriptPath = $MyInvocation.MyCommand.Path
 $ScriptDirectory = Split-Path $ScriptPath -Parent
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
+
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
+}
 
 # $Target = "h:"
 if (-not $Target) {

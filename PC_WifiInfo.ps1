@@ -1,3 +1,7 @@
+#Requires -Version 5.1
+
+Set-StrictMode -Version Latest
+
 Add-Type -AssemblyName System.Windows.Forms
 
 function Get-WifiPassword {
@@ -7,11 +11,11 @@ function Get-WifiPassword {
     begin {
         try {
             # Export all Wifi profiles and collect their XML file paths
-            $ExportPath = New-Item -Path $HOME -Name ('GetWifiPassword_' + (New-Guid).Guid) -ItemType Directory
+            $ExportPath = New-Item -Path $HOME -Name ('GetWifiPassword_' + (New-Guid).Guid) -ItemType Directory -ErrorAction Stop
             $CurrentPath = (Get-Location).Path
             Set-Location $ExportPath
-            netsh wlan export profile key=clear
-            $XmlFilePaths = Get-ChildItem -Path $ExportPath -File
+            netsh wlan export profile key=clear | Out-Null
+            $XmlFilePaths = Get-ChildItem -Path $ExportPath -File -ErrorAction Stop
         }
         catch {
             Write-Error "Failed to export Wifi profiles: $($_.Exception.Message)"
@@ -92,8 +96,13 @@ function Get-WifiPassword {
     }
     
     end {
-        Set-Location $CurrentPath
-        # Remove-Item $ExportPath -Confirm:$false -Recurse
+        try {
+            Set-Location $CurrentPath
+            Remove-Item $ExportPath -Confirm:$false -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        catch {
+            Write-Warning "Failed to clean up temporary WiFi export directory: $_"
+        }
     }
 }
 

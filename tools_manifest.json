@@ -1,0 +1,115 @@
+{
+  "manifest_version": "1.0",
+  "created": "2026-02-15",
+  "description": "External tools used by Onion Desktop Tools",
+  "verification_required": true,
+  "tools": [
+    {
+      "name": "7z.exe",
+      "description": "7-Zip command line - file archiver",
+      "version": "Unknown",
+      "sha256": "3092f736f9f4fc0ecc00a4d27774f9e09b6f1d6eee8acc1b45667fe1808646a6",
+      "size_bytes": 344064,
+      "source_url": "https://7-zip.org/",
+      "required": true,
+      "purpose": "Extract Onion OS zip files"
+    },
+    {
+      "name": "wget.exe",
+      "description": "GNU Wget - network downloader",
+      "version": "Unknown",
+      "sha256": "669fde7d3ca80f269004acca01b3ff789a0c125ce2c8e31eb97952d8f47b5f9b",
+      "size_bytes": 668672,
+      "source_url": "https://eternallybored.org/misc/wget/",
+      "required": true,
+      "purpose": "Download Onion OS releases from GitHub"
+    },
+    {
+      "name": "RMPARTUSB.exe",
+      "description": "RMPartUSB - USB drive partition manager",
+      "version": "Unknown",
+      "sha256": "eddac27bd219aab077e86f61d0fd93318f10d889460bc1201097843c0cfb8c07",
+      "size_bytes": 1572864,
+      "source_url": "https://www.rmprepusb.com/",
+      "required": true,
+      "purpose": "Format SD cards in FAT32, get drive information"
+    },
+    {
+      "name": "RMPARTUSB-old.exe",
+      "description": "RMPartUSB - USB drive partition manager (legacy version)",
+      "version": "Unknown",
+      "sha256": "a2fdae84eaa8515227bd31e1f7f11cb9a61d9b2998254fc51d00a52980e130ed",
+      "size_bytes": 1572864,
+      "source_url": "https://www.rmprepusb.com/",
+      "required": true,
+      "purpose": "Format SD cards in FAT32 (fallback)"
+    },
+    {
+      "name": "RemoveDrive.exe",
+      "description": "Safely eject USB drives",
+      "version": "Unknown",
+      "sha256": "de9707cdb333d0ebdaf3feed132d78290634e586b1e0cbb17baca4d0ae51e523",
+      "size_bytes": 91136,
+      "source_url": "https://www.uwe-sieber.de/drivetools_e.html",
+      "required": false,
+      "purpose": "Safely eject SD card after operations"
+    },
+    {
+      "name": "strings.exe",
+      "description": "Sysinternals Strings - extract text from binaries",
+      "version": "Unknown",
+      "sha256": "82db11a702f8df306bdb103a9204599edd698525acf98e35182d682323732606",
+      "size_bytes": 149504,
+      "source_url": "https://docs.microsoft.com/en-us/sysinternals/downloads/strings",
+      "required": false,
+      "purpose": "Extract Onion version from installUI binary"
+    },
+    {
+      "name": "LockHunter32.exe",
+      "description": "LockHunter - unlock files locked by processes (32-bit)",
+      "version": "Unknown",
+      "sha256": "ad6094a7c0b72ae972c6e2f9b8948ff9dacdaeb02ebab1e0b69f894cb48e58e3",
+      "size_bytes": null,
+      "source_url": "https://lockhunter.com/",
+      "required": false,
+      "purpose": "Unlock SD card files before format"
+    },
+    {
+      "name": "LockHunter64.exe",
+      "description": "LockHunter - unlock files locked by processes (64-bit)",
+      "version": "Unknown",
+      "sha256": "3e9254aad2825d496cb6929070941788b39dc8ca5f3a8154ba4ec99be9c9b351",
+      "size_bytes": null,
+      "source_url": "https://lockhunter.com/",
+      "required": false,
+      "purpose": "Unlock SD card files before format"
+    },
+    {
+      "name": "curl.exe",
+      "description": "cURL - data transfer tool",
+      "version": "Unknown",
+      "sha256": "e6f66d659242aa7d6dd3c1967714c6cd3e0b11aaa235e7f7a150a3316dae8e61",
+      "size_bytes": 498688,
+      "source_url": "https://curl.se/",
+      "required": false,
+      "purpose": "Alternative download tool (not currently used)"
+    },
+    {
+      "name": "fat32format.exe",
+      "description": "FAT32 Format - format large drives in FAT32",
+      "version": "Unknown",
+      "sha256": "e6d3a421896f1b67bb5fb2b9ac4be3571c1051f1f47820373a8e7920ce710057",
+      "size_bytes": 76800,
+      "source_url": "http://www.ridgecrop.demon.co.uk/index.htm?guiformat.htm",
+      "required": false,
+      "purpose": "Alternative FAT32 formatter (not currently used)"
+    }
+  ],
+  "notes": [
+    "SHA256 hashes computed on 2026-02-15",
+    "Tool versions should be documented when updating tools",
+    "Required tools must be present for core functionality",
+    "Optional tools provide enhanced features but are not critical",
+    "Always verify checksums when updating tools from external sources"
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "Language": "Italiano",
+  "LanguageCode": "it-IT",
+  "Strings": {
+    "Common": {
+      "Yes": "Sì",
+      "No": "No",
+      "Cancel": "Annulla",
+      "Continue": "Continua",
+      "Error": "Errore",
+      "Warning": "Avviso",
+      "Success": "Successo",
+      "Info": "Informazione"
+    },
+    "Security": {
+      "AdminRequired": "Sono necessari privilegi di amministratore per eseguire questa operazione.",
+      "SystemDiskWarning": "ATTENZIONE: Questo sembra essere un disco di sistema. La formattazione distruggerà l'installazione di Windows!",
+      "DiskValidationFailed": "Validazione del disco fallita. Impossibile procedere con l'operazione di formattazione.",
+      "ConfirmDestructive": "Questa operazione è distruttiva e non può essere annullata. Sei sicuro di voler continuare?"
+    },
+    "Logging": {
+      "LoggingInitialized": "Sistema di logging inizializzato",
+      "LogRotationComplete": "Rotazione dei log completata",
+      "LogFileCreated": "File di log creato: {0}"
+    },
+    "Configuration": {
+      "ConfigLoaded": "Configurazione caricata con successo",
+      "ConfigLoadFailed": "Impossibile caricare la configurazione, uso i valori predefiniti",
+      "ConfigNotFound": "File di configurazione non trovato: {0}"
+    },
+    "Operations": {
+      "DryRunMode": "[SIMULAZIONE] Eseguirebbe: {0}",
+      "OperationStarted": "Operazione avviata: {0}",
+      "OperationCompleted": "Operazione completata: {0}",
+      "OperationFailed": "Operazione fallita: {0}",
+      "OperationCancelled": "Operazione annullata dall'utente"
+    },
+    "Download": {
+      "DownloadStarted": "Download avviato: {0}",
+      "DownloadComplete": "Download completato: {0}",
+      "DownloadFailed": "Download fallito: {0}",
+      "HashVerification": "Verifica dell'integrità del file (SHA256)...",
+      "HashMatch": "Verifica hash superata",
+      "HashMismatch": "Verifica hash fallita! Il file potrebbe essere corrotto."
+    },
+    "Format": {
+      "FormatStarted": "Operazione di formattazione avviata sul disco {0}",
+      "FormatComplete": "Operazione di formattazione completata con successo",
+      "FormatFailed": "Operazione di formattazione fallita: {0}",
+      "DiskTooLarge": "Avviso: Il disco è più grande di 512GB. Verifica che questa sia la scheda SD corretta."
+    },
+    "Tests": {
+      "TestsPassed": "Tutti i test sono stati superati!",
+      "TestsFailed": "Alcuni test sono falliti",
+      "RunningTests": "Esecuzione test in corso...",
+      "TestSummary": "Riepilogo Risultati Test"
+    }
+  }
+}
