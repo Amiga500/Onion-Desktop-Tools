@@ -1,0 +1,59 @@
+{
+  "Language": "Deutsch",
+  "LanguageCode": "de-DE",
+  "Strings": {
+    "Common": {
+      "Yes": "Ja",
+      "No": "Nein",
+      "Cancel": "Abbrechen",
+      "Continue": "Fortfahren",
+      "Error": "Fehler",
+      "Warning": "Warnung",
+      "Success": "Erfolg",
+      "Info": "Information"
+    },
+    "Security": {
+      "AdminRequired": "Administratorrechte sind erforderlich, um diesen Vorgang auszuführen.",
+      "SystemDiskWarning": "WARNUNG: Dies scheint eine Systemfestplatte zu sein. Das Formatieren wird Ihre Windows-Installation zerstören!",
+      "DiskValidationFailed": "Datenträgerüberprüfung fehlgeschlagen. Der Formatierungsvorgang kann nicht fortgesetzt werden.",
+      "ConfirmDestructive": "Dieser Vorgang ist destruktiv und kann nicht rückgängig gemacht werden. Sind Sie sicher, dass Sie fortfahren möchten?"
+    },
+    "Logging": {
+      "LoggingInitialized": "Protokollierungssystem initialisiert",
+      "LogRotationComplete": "Protokollrotation abgeschlossen",
+      "LogFileCreated": "Protokolldatei erstellt: {0}"
+    },
+    "Configuration": {
+      "ConfigLoaded": "Konfiguration erfolgreich geladen",
+      "ConfigLoadFailed": "Konfiguration konnte nicht geladen werden, Standardwerte werden verwendet",
+      "ConfigNotFound": "Konfigurationsdatei nicht gefunden: {0}"
+    },
+    "Operations": {
+      "DryRunMode": "[TESTLAUF] Würde ausführen: {0}",
+      "OperationStarted": "Vorgang gestartet: {0}",
+      "OperationCompleted": "Vorgang abgeschlossen: {0}",
+      "OperationFailed": "Vorgang fehlgeschlagen: {0}",
+      "OperationCancelled": "Vorgang vom Benutzer abgebrochen"
+    },
+    "Download": {
+      "DownloadStarted": "Download gestartet: {0}",
+      "DownloadComplete": "Download abgeschlossen: {0}",
+      "DownloadFailed": "Download fehlgeschlagen: {0}",
+      "HashVerification": "Dateiintegrität wird überprüft (SHA256)...",
+      "HashMatch": "Hash-Überprüfung erfolgreich",
+      "HashMismatch": "Hash-Überprüfung fehlgeschlagen! Die Datei könnte beschädigt sein."
+    },
+    "Format": {
+      "FormatStarted": "Formatierungsvorgang auf Datenträger {0} gestartet",
+      "FormatComplete": "Formatierungsvorgang erfolgreich abgeschlossen",
+      "FormatFailed": "Formatierungsvorgang fehlgeschlagen: {0}",
+      "DiskTooLarge": "Warnung: Datenträger ist größer als 512GB. Bitte überprüfen Sie, ob dies die richtige SD-Karte ist."
+    },
+    "Tests": {
+      "TestsPassed": "Alle Tests bestanden!",
+      "TestsFailed": "Einige Tests sind fehlgeschlagen",
+      "RunningTests": "Tests werden ausgeführt...",
+      "TestSummary": "Testzusammenfassung"
+    }
+  }
+}

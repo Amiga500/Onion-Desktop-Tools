@@ -1,11 +1,13 @@
-﻿param (
+﻿#Requires -Version 5.1
+
+param (
     [Parameter(Mandatory = $false)]
     [string]$Update_File,
     [Parameter(Mandatory = $false)]
     [string]$Target
 )
 
-
+Set-StrictMode -Version Latest
 
 # $Target = "G:"
 $script:SdCardState = ""
@@ -13,6 +15,12 @@ $ScriptPath = $MyInvocation.MyCommand.Path
 $ScriptDirectory = Split-Path $ScriptPath -Parent
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
+
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
+}
 
 if (-not $Target) {
     . "$PSScriptRoot\Disk_selector.ps1"
@@ -23,9 +31,28 @@ if (-not $Target) {
 }
 
 $7zPath = "$PSScriptRoot\tools\7z.exe"
+
+# Verify 7-Zip is available
+if (-not (Test-Path -Path $7zPath)) {
+    Write-Error "7-Zip not found at: $7zPath"
+    [System.Windows.Forms.MessageBox]::Show(
+        "Required tool 7-Zip not found. Cannot extract files.`n`nPath: $7zPath",
+        "Missing Tool",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Error
+    )
+    exit 1
+}
+
 # Vérification de l'espace disponible sur le lecteur cible
-$driveInfo = Get-PSDrive -PSProvider 'FileSystem' | Where-Object { $_.Root -eq "$Target\" }
-$freeSpace = $driveInfo.Free
+try {
+    $driveInfo = Get-PSDrive -PSProvider 'FileSystem' -ErrorAction Stop | Where-Object { $_.Root -eq "$Target\" }
+    $freeSpace = $driveInfo.Free
+    Write-ODTLog "Free space on $Target : $([Math]::Round($freeSpace / 1MB)) MB" -Level Info
+} catch {
+    Write-Warning "Could not determine free space on target drive: $_"
+    $freeSpace = $null
+}
 
 
 # Vérification de la disponibilité de l'espace nécessaire pour l'extraction
@@ -220,33 +247,41 @@ function Button_Click {
             $label_right.SelectionStart = $label_right.Text.Length
             $label_right.ScrollToCaret()
 
-            $wgetProcess = Start-Process -FilePath "cmd" -ArgumentList "/c @title extracting $Update_File to $Target & mode con:cols=80 lines=1 & `"$7zPath`" x -y -aoa `"downloads\$Update_File`" -o`"$Target\`"" -PassThru
-            $wgetProcess.WaitForExit()
-            $exitCode = $wgetProcess.ExitCode
-            # while (!$wgetProcess.HasExited) {
-            #     Start-Sleep -Milliseconds 1000
-            # }
-            
-
-            if ($exitCode -eq 0) {
-                Write-Host "Decompression successful."
-                Write-Host "`n`nUpdate $Release_Version applied.`nInsert SD card in your Miyoo and start it to run installation!`n"
-                $label_right.Text += "`r`nExtraction successful !`r`nYou can now close this Windows.`r`nInsert this SD card in your Miyoo to start Installation."
-                $soundPlayer = New-Object System.Media.SoundPlayer
-                $soundPlayer.SoundLocation = "tools\res\success.wav"
-                $soundPlayer.Play()
+            try {
+                Write-ODTLog "Starting extraction of $Update_File to $Target" -Level Info
+                
+                $wgetProcess = Start-Process -FilePath "cmd" -ArgumentList "/c @title extracting $Update_File to $Target & mode con:cols=80 lines=1 & `"$7zPath`" x -y -aoa `"downloads\$Update_File`" -o`"$Target\`"" -PassThru
+                $wgetProcess.WaitForExit()
+                $exitCode = $wgetProcess.ExitCode
+                
+                if ($exitCode -eq 0) {
+                    Write-Host "Decompression successful."
+                    Write-Host "`n`nUpdate $Release_Version applied.`nInsert SD card in your Miyoo and start it to run installation!`n"
+                    Write-ODTLog "Extraction completed successfully" -Level Info
+                    $label_right.Text += "`r`nExtraction successful !`r`nYou can now close this Windows.`r`nInsert this SD card in your Miyoo to start Installation."
+                    $soundPlayer = New-Object System.Media.SoundPlayer
+                    $soundPlayer.SoundLocation = "tools\res\success.wav"
+                    $soundPlayer.Play()
+                }
+                else {
+                    Write-Host "`n`nError: Something went wrong during decompression.`nTry to run OTA update again or make a manual update.`nInstallation stopped."
+                    Write-ODTLog "Extraction failed with exit code: $exitCode" -Level Error
+                    $label_right.Text += "`r`nError: Something went wrong during decompression.`r`nTry to run OTA update again or make a manual update.`r`nInstallation stopped."
+                    $soundPlayer = New-Object System.Media.SoundPlayer
+                    $soundPlayer.SoundLocation = "tools\res\fail.wav"
+                    $soundPlayer.Play()
+                }
             }
-            else {
-                Write-Host "`n`nError: Something went wrong during decompression.`nTry to run OTA update again or make a manual update.`nInstallation stopped."
-                $label_right.Text += "`r`nError: Something went wrong during decompression.`r`nTry to run OTA update again or make a manual update.`r`nInstallation stopped."
-                $soundPlayer = New-Object System.Media.SoundPlayer
-                $soundPlayer.SoundLocation = "tools\res\fail.wav"
-                $soundPlayer.Play()
+            catch {
+                Write-ODTLog "Critical error during extraction: $_" -Level Error
+                $label_right.Text += "`r`nCritical error: $_"
+                [System.Windows.Forms.MessageBox]::Show(
+                    "Extraction failed with error:`n`n$_",
+                    "Extraction Error",
+                    [System.Windows.Forms.MessageBoxButtons]::OK,
+                    [System.Windows.Forms.MessageBoxIcon]::Error
+                )
             }
-            # else {
-            #     Write-Host "Insufficient space on $Target drive to extract file."
-            #     $label_right.Text += "`r`nInsufficient space on $Target drive to extract file."
-            # }
 
             $button.Enabled = 1
 

@@ -1,8 +1,17 @@
-﻿$ScriptPath = $MyInvocation.MyCommand.Path
+﻿#Requires -Version 5.1
+
+Set-StrictMode -Version Latest
+
+$ScriptPath = $MyInvocation.MyCommand.Path
 $ScriptDirectory = Split-Path $ScriptPath -Parent
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
 
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
+}
 
 Add-Type -AssemblyName System.Windows.Forms
 
@@ -142,6 +151,23 @@ function Download-Button_Click {
     if ($Downloaded_size -eq $size) {
         Write-Host "File size already OK ! ($Downloaded_size Bytes)"
         $DL_Lbl.Text = "File size already OK ! ($Downloaded_size Bytes)"
+        
+        # Verify file integrity using enhanced Test-FileHash
+        try {
+            $verifyResult = Test-FileHash -FilePath "downloads\$Update_FileName" -AssetInfo $asset
+            if ($verifyResult.Success) {
+                Write-Host "File verification passed"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-ODTLog "Download verified: $Update_FileName - Hash: $($verifyResult.ActualHash)" -Level Info
+            } else {
+                Write-Warning "File verification incomplete: $($verifyResult.Message)"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-ODTLog "Verification warning for $Update_FileName : $($verifyResult.Message)" -Level Warning
+            }
+        } catch {
+            Write-Warning "Could not verify file: $_"
+        }
+        
         $DownloadButton.enabled = 1
         return 
         #Start-Sleep -Seconds 3
@@ -190,9 +216,29 @@ function Download-Button_Click {
         $Downloaded_size = Get-Item -Path downloads\$Update_FileName | Select-Object -ExpandProperty Length
     }
     else { $Downloaded_size = 0 }
+    
     if ($Downloaded_size -eq $size) {
         Write-Host "File size OK! ($Downloaded_size)"
         $DL_Lbl.Text = "Download successful."
+        
+        # Verify file integrity using enhanced Test-FileHash
+        try {
+            $verifyResult = Test-FileHash -FilePath "downloads\$Update_FileName" -AssetInfo $asset
+            if ($verifyResult.Success) {
+                Write-Host "File verification passed"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-ODTLog "Download verified: $Update_FileName - Size: $Downloaded_size bytes, Hash: $($verifyResult.ActualHash)" -Level Info
+            } else {
+                Write-Warning "File verification incomplete: $($verifyResult.Message)"
+                Write-Host "SHA256: $($verifyResult.ActualHash)"
+                Write-Host "Please verify this hash matches the official release if security is critical."
+                Write-ODTLog "Verification warning for $Update_FileName : $($verifyResult.Message)" -Level Warning
+            }
+        } catch {
+            Write-Warning "Could not verify file: $_"
+            Write-Host "Please manually verify the downloaded file."
+        }
+        
         #Start-Sleep -Seconds 3
         $timer.Start()
     }

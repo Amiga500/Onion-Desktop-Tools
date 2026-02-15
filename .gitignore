@@ -1,0 +1,39 @@
+# Onion Desktop Tools - Git Ignore
+
+# Log files
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+ODT_update_temporary.ps1
+
+# Downloaded files (user-specific)
+downloads/*.zip
+downloads/ODT_updates/
+
+# Backup files (user-specific)
+backups/*
+!backups/.gitkeep
+
+# Test results and coverage
+Tests/testresults.*
+Tests/coverage.xml
+Tests/*.trx
+
+# Windows thumbnail cache
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin
+$RECYCLE.BIN/
+
+# Mac
+.DS_Store
+
+# PowerShell
+*.ps1~

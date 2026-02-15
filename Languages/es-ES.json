@@ -1,0 +1,59 @@
+{
+  "Language": "Español",
+  "LanguageCode": "es-ES",
+  "Strings": {
+    "Common": {
+      "Yes": "Sí",
+      "No": "No",
+      "Cancel": "Cancelar",
+      "Continue": "Continuar",
+      "Error": "Error",
+      "Warning": "Advertencia",
+      "Success": "Éxito",
+      "Info": "Información"
+    },
+    "Security": {
+      "AdminRequired": "Se requieren privilegios de administrador para ejecutar esta operación.",
+      "SystemDiskWarning": "ADVERTENCIA: Esto parece ser un disco del sistema. ¡El formateo destruirá su instalación de Windows!",
+      "DiskValidationFailed": "La validación del disco ha fallado. No se puede continuar con la operación de formateo.",
+      "ConfirmDestructive": "Esta operación es destructiva y no se puede deshacer. ¿Está seguro de que desea continuar?"
+    },
+    "Logging": {
+      "LoggingInitialized": "Sistema de registro inicializado",
+      "LogRotationComplete": "Rotación de registros completada",
+      "LogFileCreated": "Archivo de registro creado: {0}"
+    },
+    "Configuration": {
+      "ConfigLoaded": "Configuración cargada correctamente",
+      "ConfigLoadFailed": "No se pudo cargar la configuración, usando valores predeterminados",
+      "ConfigNotFound": "Archivo de configuración no encontrado: {0}"
+    },
+    "Operations": {
+      "DryRunMode": "[SIMULACIÓN] Ejecutaría: {0}",
+      "OperationStarted": "Operación iniciada: {0}",
+      "OperationCompleted": "Operación completada: {0}",
+      "OperationFailed": "Operación fallida: {0}",
+      "OperationCancelled": "Operación cancelada por el usuario"
+    },
+    "Download": {
+      "DownloadStarted": "Descarga iniciada: {0}",
+      "DownloadComplete": "Descarga completada: {0}",
+      "DownloadFailed": "Descarga fallida: {0}",
+      "HashVerification": "Verificando integridad del archivo (SHA256)...",
+      "HashMatch": "Verificación de hash exitosa",
+      "HashMismatch": "¡Verificación de hash fallida! El archivo puede estar corrupto."
+    },
+    "Format": {
+      "FormatStarted": "Operación de formateo iniciada en el disco {0}",
+      "FormatComplete": "Operación de formateo completada exitosamente",
+      "FormatFailed": "Operación de formateo fallida: {0}",
+      "DiskTooLarge": "Advertencia: El disco es mayor de 512GB. Verifique que esta sea la tarjeta SD correcta."
+    },
+    "Tests": {
+      "TestsPassed": "¡Todas las pruebas pasaron!",
+      "TestsFailed": "Algunas pruebas fallaron",
+      "RunningTests": "Ejecutando pruebas...",
+      "TestSummary": "Resumen de Resultados de Pruebas"
+    }
+  }
+}

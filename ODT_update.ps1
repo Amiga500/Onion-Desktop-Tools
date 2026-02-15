@@ -1,13 +1,27 @@
-﻿$ScriptDirectory = $PSScriptRoot
+﻿#Requires -Version 5.1
+
+Set-StrictMode -Version Latest
+
+$ScriptDirectory = $PSScriptRoot
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
 
-
-if (-Not (Test-Path "downloads\ODT_updates" -PathType Container)) {
-    New-Item -ItemType Directory -Path "downloads\ODT_updates"
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
 }
-if (-Not (Test-Path "backups" -PathType Container)) {
-    New-Item -ItemType Directory -Path "backups"
+
+# Initialize required directories
+try {
+    if (-Not (Test-Path "downloads\ODT_updates" -PathType Container)) {
+        New-Item -ItemType Directory -Path "downloads\ODT_updates" | Out-Null
+    }
+    if (-Not (Test-Path "backups" -PathType Container)) {
+        New-Item -ItemType Directory -Path "backups" | Out-Null
+    }
+} catch {
+    Write-Warning "Failed to create required directories: $_"
 }
 
 
@@ -17,7 +31,16 @@ Add-Type -AssemblyName System.Windows.Forms
 $apiUrl = "https://api.github.com/repos/Schmurtzm/Onion-Desktop-Tools/releases/latest"
 
 # Get the information of the latest release from GitHub API
-$releaseInfo = Invoke-RestMethod -Uri $apiUrl
+try {
+    Write-ODTLog "Checking for ODT updates..." -Level Info
+    $releaseInfo = Invoke-RestMethod -Uri $apiUrl -ErrorAction Stop
+} catch {
+    Write-Warning "Failed to retrieve the latest version from GitHub API: $_"
+    Write-Host "Failed to retrieve the latest version from GitHub API. No action required."
+    # Continue with menu without update check
+    . "$PSScriptRoot\Menu.ps1"
+    exit
+}
 
 # Get the version number from the tag_name in the API response
 if ($releaseInfo -and $releaseInfo.tag_name) {
@@ -80,32 +103,61 @@ if ($latestVersion -gt $currentVersion) {
     $form.ShowDialog() | Out-Null
 
     if ($form.DialogResult -eq [System.Windows.Forms.DialogResult]::Yes) {
-        Write-Host "Downloading..."
+        try {
+            Write-Host "Downloading..."
+            Write-ODTLog "Downloading ODT update from GitHub" -Level Info
 
-        # Download the ZIP file
-        $zipUrl = $releaseInfo.zipball_url
-        $zipFilePath = "downloads\ODT_updates\Onion-Desktop-Tools.zip"
-        Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
+            # Download the ZIP file
+            $zipUrl = $releaseInfo.zipball_url
+            $zipFilePath = "downloads\ODT_updates\Onion-Desktop-Tools.zip"
+            Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath -ErrorAction Stop
 
-        # Extract the contents of the ZIP file using 7-Zip
-        $extractDir = "downloads\ODT_updates\tempUpdateFolder"
-        if (-Not (Test-Path "downloads\ODT_updates\tempUpdateFolder" -PathType Container)) {
-            New-Item -ItemType Directory -Path "downloads\ODT_updates\tempUpdateFolder"
+            # Verify download
+            if (-not (Test-Path -Path $zipFilePath)) {
+                throw "Downloaded file not found"
+            }
+            
+            Write-ODTLog "Download completed. Extracting..." -Level Info
+
+            # Extract the contents of the ZIP file using 7-Zip
+            $extractDir = "downloads\ODT_updates\tempUpdateFolder"
+            if (-Not (Test-Path "downloads\ODT_updates\tempUpdateFolder" -PathType Container)) {
+                New-Item -ItemType Directory -Path "downloads\ODT_updates\tempUpdateFolder" | Out-Null
+            }
+            $7zPath = "tools\7z.exe"
+            
+            if (-not (Test-Path -Path $7zPath)) {
+                throw "7-Zip not found at: $7zPath"
+            }
+            
+            $output = & $7zPath x -y $zipFilePath "-o$extractDir"
+
+            #  Find the subfolder with a GUID inside the extracted contents
+            $guidSubfolder = Get-ChildItem -Path $extractDir -ErrorAction Stop | Where-Object { $_.PSIsContainer -and $_.Name -match 'schmurtzm-Onion-Desktop-Tools-.+' }
+
+            if (-not $guidSubfolder) {
+                throw "Could not find extracted files in expected format"
+            }
+
+            #  Move the files from the GUID subfolder to the current folder
+            Move-Item -Path "$($guidSubfolder.FullName)\*" -Destination . -Force -ErrorAction Stop
+
+            #  Clean up the temporary extraction folder
+            Remove-Item -Path $extractDir -Recurse -Force -ErrorAction Stop
+
+            Write-Host "Download and extraction completed."
+            Write-ODTLog "ODT update completed successfully" -Level Info
         }
-        $7zPath = "tools\7z.exe"
-        $output = & $7zPath x -y $zipFilePath "-o$extractDir"
-
-
-        #  Find the subfolder with a GUID inside the extracted contents
-        $guidSubfolder = Get-ChildItem -Path $extractDir | Where-Object { $_.PSIsContainer -and $_.Name -match 'schmurtzm-Onion-Desktop-Tools-.+' }
-
-        #  Move the files from the GUID subfolder to the current folder
-        Move-Item -Path "$($guidSubfolder.FullName)\*" -Destination . -Force
-
-        #  Clean up the temporary extraction folder
-        Remove-Item -Path $extractDir -Recurse -Force
-
-        Write-Host "Download and extraction completed."
+        catch {
+            Write-Error "Update failed: $_"
+            Write-ODTLog "ODT update failed: $_" -Level Error
+            [System.Windows.Forms.MessageBox]::Show(
+                "Update failed with error:`n`n$_`n`nPlease try again or download manually.",
+                "Update Error",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Error
+            )
+        }
     }
     else {
         Write-Host "Operation canceled. No download performed."

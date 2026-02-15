@@ -1,4 +1,25 @@
 {
+  "ODT_Settings": {
+    "General": {
+      "LogLevel": "Info",
+      "EnablePersistentLogging": true,
+      "LogRetentionDays": 30,
+      "MaxLogSizeMB": 10,
+      "Language": "en-US",
+      "CheckForUpdates": true
+    },
+    "Operations": {
+      "DryRunMode": false,
+      "ConfirmDestructiveOperations": true,
+      "EnableCtrlCHandling": true,
+      "AutoBackupBeforeFormat": false
+    },
+    "Advanced": {
+      "VerifyToolsIntegrity": true,
+      "VerifyDownloadHashes": true,
+      "PowerShell7Mode": false
+    }
+  },
   "Onion_Configuration": {
     "System": [
       {

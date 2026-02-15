@@ -1,7 +1,17 @@
-﻿$ScriptPath = $MyInvocation.MyCommand.Path
+﻿#Requires -Version 5.1
+
+Set-StrictMode -Version Latest
+
+$ScriptPath = $MyInvocation.MyCommand.Path
 $ScriptDirectory = Split-Path $ScriptPath -Parent
 Set-Location -Path $ScriptDirectory
 [Environment]::CurrentDirectory = Get-Location
+
+# Import common functions
+$commonFunctionsPath = Join-Path -Path $PSScriptRoot -ChildPath "Common-Functions.ps1"
+if (Test-Path -Path $commonFunctionsPath) {
+    . $commonFunctionsPath
+}
 
 $Drive_Letter = $args[0]
 #  $Drive_Letter = "l"

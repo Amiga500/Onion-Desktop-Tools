@@ -1,0 +1,59 @@
+{
+  "Language": "Français",
+  "LanguageCode": "fr-FR",
+  "Strings": {
+    "Common": {
+      "Yes": "Oui",
+      "No": "Non",
+      "Cancel": "Annuler",
+      "Continue": "Continuer",
+      "Error": "Erreur",
+      "Warning": "Avertissement",
+      "Success": "Succès",
+      "Info": "Information"
+    },
+    "Security": {
+      "AdminRequired": "Des privilèges administrateur sont requis pour exécuter cette opération.",
+      "SystemDiskWarning": "ATTENTION : Ceci semble être un disque système. Le formatage détruira votre installation Windows !",
+      "DiskValidationFailed": "La validation du disque a échoué. Impossible de poursuivre l'opération de formatage.",
+      "ConfirmDestructive": "Cette opération est destructive et ne peut pas être annulée. Êtes-vous sûr de vouloir continuer ?"
+    },
+    "Logging": {
+      "LoggingInitialized": "Système de journalisation initialisé",
+      "LogRotationComplete": "Rotation des journaux terminée",
+      "LogFileCreated": "Fichier journal créé : {0}"
+    },
+    "Configuration": {
+      "ConfigLoaded": "Configuration chargée avec succès",
+      "ConfigLoadFailed": "Échec du chargement de la configuration, utilisation des valeurs par défaut",
+      "ConfigNotFound": "Fichier de configuration introuvable : {0}"
+    },
+    "Operations": {
+      "DryRunMode": "[SIMULATION] Exécuterait : {0}",
+      "OperationStarted": "Opération démarrée : {0}",
+      "OperationCompleted": "Opération terminée : {0}",
+      "OperationFailed": "Opération échouée : {0}",
+      "OperationCancelled": "Opération annulée par l'utilisateur"
+    },
+    "Download": {
+      "DownloadStarted": "Téléchargement démarré : {0}",
+      "DownloadComplete": "Téléchargement terminé : {0}",
+      "DownloadFailed": "Téléchargement échoué : {0}",
+      "HashVerification": "Vérification de l'intégrité du fichier (SHA256)...",
+      "HashMatch": "Vérification du hash réussie",
+      "HashMismatch": "Échec de la vérification du hash ! Le fichier peut être corrompu."
+    },
+    "Format": {
+      "FormatStarted": "Opération de formatage démarrée sur le disque {0}",
+      "FormatComplete": "Opération de formatage terminée avec succès",
+      "FormatFailed": "Opération de formatage échouée : {0}",
+      "DiskTooLarge": "Avertissement : Le disque dépasse 512 Go. Veuillez vérifier qu'il s'agit bien de la carte SD correcte."
+    },
+    "Tests": {
+      "TestsPassed": "Tous les tests ont réussi !",
+      "TestsFailed": "Certains tests ont échoué",
+      "RunningTests": "Exécution des tests en cours...",
+      "TestSummary": "Résumé des Résultats de Test"
+    }
+  }
+}
