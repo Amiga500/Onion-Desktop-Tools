@@ -85,8 +85,18 @@ An advanced tutorial video about Onion Desktop Tool,  (click on the picture to v
 - ✅ Unit testing framework (Pester with 15+ tests)
 - ✅ Ctrl+C handling for graceful interruption
 - ✅ Dry-run mode (-WhatIf support for safe previews)
-- ✅ Multi-language support infrastructure (en-US)
+- ✅ Multi-language support (5 languages: en-US, it-IT, fr-FR, es-ES, de-DE)
 - ✅ PowerShell 7 compatibility (tested on 7.4.13)
+
+**Phase 4 - Comprehensive Testing:**
+- ✅ 186 tests across 7 test suites (98.9% pass rate)
+- ✅ Complete coverage: Security, Operations, Error Handling, Integration
+- ✅ Cross-platform test support (Windows/Linux/Mac)
+
+**Phase 5 - Complete Multi-Language Support:**
+- ✅ Italian (it-IT), French (fr-FR), Spanish (es-ES), German (de-DE)
+- ✅ 60+ translated strings per language
+- ✅ Easy language switching via config.json
 
 **Logging:**
 - All operations are logged to console with timestamps
@@ -118,6 +128,31 @@ For detailed security analysis and code quality review, see [CODE_REVIEW.md](COD
 - Run tests: `.\Run-Tests.ps1` (requires Pester framework)
 - Dry-run mode: Add `-WhatIf` to preview operations safely
 - See [PHASE3_SUMMARY.md](PHASE3_SUMMARY.md) for advanced features documentation
+
+### Multi-Language Support 🌍
+
+**Supported Languages (5 total):**
+- 🇺🇸 English (en-US) - Default
+- 🇮🇹 Italian (it-IT) - Italiano  
+- 🇫🇷 French (fr-FR) - Français
+- 🇪🇸 Spanish (es-ES) - Español
+- 🇩🇪 German (de-DE) - Deutsch
+
+**Change Language:**
+Edit `config.json` and set your preferred language:
+```json
+{
+  "ODT_Settings": {
+    "General": {
+      "Language": "it-IT"
+    }
+  }
+}
+```
+
+**Available options:** `en-US`, `it-IT`, `fr-FR`, `es-ES`, `de-DE`
+
+All user-facing messages including errors, warnings, and confirmations will display in the selected language.
 
 ------------------------------------------------
 
